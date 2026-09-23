@@ -1,0 +1,2159 @@
+[
+  {
+    "name": "get_pipeline",
+    "title": "Sales pipeline",
+    "description": "Read your workspace's CRM opportunities and company lifecycle. Money is in minor units and totals are separated by currency. Probabilities are explicit stage/team estimates, not calibrated predictions or verified revenue. Requires the CRM feature.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "q": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "currency": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 3
+        },
+        "attention": {
+          "type": "boolean"
+        },
+        "scope": {
+          "default": "active",
+          "description": "Active excludes archived companies; archived and all preserve historical access.",
+          "type": "string",
+          "enum": [
+            "active",
+            "archived",
+            "all"
+          ]
+        },
+        "offset": {
+          "default": 0,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 10000
+        },
+        "limit": {
+          "default": 50,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 100
+        }
+      }
+    },
+    "annotations": {
+      "title": "Sales pipeline",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "get_company",
+    "title": "Customer 360",
+    "description": "Company, linked lead contacts, opportunities, success plan, and latest 100 source-attributed events. Recorded/imported signals do not imply a live provider connection.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "company_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "company_id"
+      ]
+    },
+    "annotations": {
+      "title": "Customer 360",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "save_company",
+    "title": "Save CRM company",
+    "description": "Create or revise a CRM company and its customer success plan. Use a new UUID and expected_revision=0 to create; use the current revision to edit. Lifecycle is your team's assessment; active never means Stripe-verified. Do not invent customer status. Does not send, enroll, or bill anyone.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "domain": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 253,
+              "pattern": "^(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z]{2,63}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lifecycle": {
+          "type": "string",
+          "enum": [
+            "prospect",
+            "onboarding",
+            "active",
+            "at_risk",
+            "churned"
+          ]
+        },
+        "owner": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 120
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "success_plan": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 4000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_review_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "expected_revision",
+        "name",
+        "domain",
+        "lifecycle",
+        "owner",
+        "success_plan",
+        "next_review_on"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "title": "Save CRM company",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "save_opportunity",
+    "title": "Save opportunity",
+    "description": "Create or revise a deal for an existing CRM company. Ask for missing value/currency; null value means unknown. Use a new UUID/revision=0 to create, otherwise current revision. Stage does not change outreach or company lifecycle. Won means recorded won, not paid. Only set probability_override when the user supplies an estimate.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "expected_revision": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 9007199254740991
+        },
+        "company_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "stage": {
+          "type": "string",
+          "enum": [
+            "new",
+            "qualified",
+            "meeting",
+            "proposal",
+            "negotiation",
+            "won",
+            "lost"
+          ]
+        },
+        "amount_minor": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 1000000000000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "currency": {
+          "type": "string",
+          "enum": [
+            "USD",
+            "EUR",
+            "GBP",
+            "CAD",
+            "AUD",
+            "INR"
+          ]
+        },
+        "probability_override": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "expected_close_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_step": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 1000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "next_step_due_on": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "date",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "expected_revision",
+        "company_id",
+        "title",
+        "stage",
+        "amount_minor",
+        "currency",
+        "probability_override",
+        "expected_close_on",
+        "next_step",
+        "next_step_due_on"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "title": "Save opportunity",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "add_company_contact",
+    "title": "Link company contact",
+    "description": "Add a company contact, optionally linked to an existing PumpGTM lead in this workspace. Never guess a lead match from a company name. Does not create or enroll outreach leads.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "company_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "email": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 254,
+              "format": "email",
+              "pattern": "^(?!\\.)(?!.*\\.\\.)([A-Za-z0-9_'+\\-\\.]*)[A-Za-z0-9_+-]@([A-Za-z0-9][A-Za-z0-9\\-]*\\.)+[A-Za-z]{2,}$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 160
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "lead_id": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "company_id",
+        "name",
+        "email",
+        "role",
+        "lead_id"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "title": "Link company contact",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "record_customer_signal",
+    "title": "Record customer signal",
+    "description": "Append a dated note, meeting, reply, product engagement, risk, or milestone, with its source link. Use evidence, not assumptions. Source names are attribution, not provider verification. Does not read a provider or send to Slack. A note never refreshes contact recency.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "company_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "kind": {
+          "type": "string",
+          "enum": [
+            "note",
+            "meeting",
+            "reply",
+            "product_engagement",
+            "risk",
+            "milestone"
+          ]
+        },
+        "source": {
+          "type": "string",
+          "enum": [
+            "manual",
+            "eve",
+            "notion",
+            "fathom",
+            "granola",
+            "calendar",
+            "slack",
+            "stripe"
+          ]
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "body": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 8000
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "occurred_at": {
+          "type": "string",
+          "format": "date-time",
+          "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+        },
+        "source_url": {
+          "anyOf": [
+            {
+              "type": "string",
+              "maxLength": 2000,
+              "format": "uri"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      },
+      "required": [
+        "id",
+        "company_id",
+        "kind",
+        "source",
+        "title",
+        "body",
+        "occurred_at",
+        "source_url"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "title": "Record customer signal",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "get_workspace",
+    "title": "Workspace status",
+    "description": "Start here. Summary: setup state (LinkedIn, billing, finish-setup link), LinkedIn progress, Plays, eligible sequences, unfinished review, pending replies count, and (when the workspace has the email channel) its mailboxes and email campaigns. view=activity reads the append-only LinkedIn activity ledger with filters. view=x_posts lists the connected X account's recent posts with like counts and which sequence, if any, already DMs each post's likers (workspaces with the X channel).",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "view": {
+          "default": "summary",
+          "type": "string",
+          "enum": [
+            "summary",
+            "activity",
+            "x_posts"
+          ]
+        },
+        "sinceDays": {
+          "default": 7,
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 365
+        },
+        "account": {
+          "type": "string",
+          "maxLength": 160
+        },
+        "actions": {
+          "maxItems": 66,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "resolve",
+              "invite",
+              "accepted",
+              "like",
+              "message",
+              "followup",
+              "reply_detected",
+              "view_profile",
+              "endorse",
+              "comment",
+              "tool_prepare",
+              "enrich",
+              "meeting_invited",
+              "reply_drafted",
+              "reply_sent",
+              "reply_dismissed",
+              "reply_snoozed",
+              "sequence_started",
+              "meeting_booked",
+              "meeting_no_show",
+              "meeting_synced",
+              "manual_override",
+              "x_dm",
+              "x_follow",
+              "x_like",
+              "x_follow_back",
+              "x_follow_back_scan",
+              "x_credit_balance",
+              "x_reply_subscription",
+              "instagram_dm",
+              "instagram_comment",
+              "track_unavailable",
+              "track_done",
+              "ad_campaign_architected",
+              "ad_campaign_saved",
+              "ad_creative_generated",
+              "ad_budget_revised",
+              "ad_approval_requested",
+              "ad_campaign_approved",
+              "ad_campaign_published_paused",
+              "linkedin_search",
+              "web_pages_read",
+              "email_found",
+              "email_campaign_created",
+              "email_campaign_added",
+              "email_sent",
+              "email_replied",
+              "email_skipped",
+              "email_bounced",
+              "email_unsubscribed",
+              "email_click",
+              "sequence_people_added",
+              "lead_replenishment_enabled",
+              "lead_replenishment_disabled",
+              "recovery_eligible",
+              "recovery_matched",
+              "recovery_enrolled",
+              "recovery_review",
+              "recovery_invite_sent",
+              "recovery_invite_accepted",
+              "recovery_message_sent",
+              "recovery_reply_detected",
+              "recovery_suppressed",
+              "engine_run",
+              "linkedin_connect",
+              "error"
+            ]
+          }
+        },
+        "outcome": {
+          "type": "string",
+          "enum": [
+            "ok",
+            "failed",
+            "skipped"
+          ]
+        },
+        "limit": {
+          "default": 100,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      }
+    },
+    "annotations": {
+      "title": "Workspace status",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "find_people",
+    "title": "Find people",
+    "description": "Create or revise a Play from targeting and run it. Targeting may include a hiring signal (currentCompanyHiringRolesAny): the person's current company must have an open job posting for one of those roles, posted within currentCompanyHiringPostedWithinDays. Without confirmed=true it only saves the Play and returns the targeting summary for the customer to confirm. An unresolved required company is preserved in the saved draft and returned under companyResolution; the Play cannot run until the customer corrects or explicitly removes it in a revision. With confirmed=true, a ready Play runs discovery and returns candidates in retrieval order. Pass playId alone to rerun an existing ready Play. Optional sequenceId sets the Play's default sequence. Creates no leads and contacts no one.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,119}$",
+          "description": "Stable idempotency key; reuse it only to retry this exact request."
+        },
+        "targeting": {
+          "type": "object",
+          "properties": {
+            "schemaVersion": {
+              "default": 1,
+              "type": "number",
+              "const": 1
+            },
+            "name": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 120,
+              "description": "A short customer-facing name for this search."
+            },
+            "candidateCount": {
+              "type": "integer",
+              "minimum": 10,
+              "maximum": 100,
+              "description": "The exact number of candidates to return, from 10 through 100."
+            },
+            "hardFilters": {
+              "type": "object",
+              "properties": {
+                "currentTitleIncludesAny": {
+                  "minItems": 1,
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 120
+                  },
+                  "description": "Alternative literal phrases; a person's current title must contain at least one."
+                },
+                "currentFunctionsAny": {
+                  "default": [],
+                  "description": "Alternative canonical current job functions. Use only when non-negotiable.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "currentSenioritiesAny": {
+                  "default": [],
+                  "description": "Alternative canonical current seniority levels. Use only when non-negotiable.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "personCountriesAny": {
+                  "default": [],
+                  "description": "Alternative countries where the person must be located.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "currentCompanyNamesAny": {
+                  "default": [],
+                  "description": "Alternative exact current-employer names, only for a named account list.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "currentCompanyDomainsAny": {
+                  "default": [],
+                  "description": "Alternative exact current-employer domains, only for a named account list.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "currentCompanyIndustriesAny": {
+                  "default": [],
+                  "description": "Alternative canonical company industries. Do not put product descriptions here.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "currentCompanyTypesAny": {
+                  "default": [],
+                  "description": "Alternative canonical company ownership types. Use only when non-negotiable.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "currentCompanyHeadcount": {
+                  "type": "object",
+                  "properties": {
+                    "minimum": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 10000000
+                    },
+                    "maximum": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 10000000
+                    }
+                  },
+                  "additionalProperties": false
+                },
+                "currentCompanyInvestorsAny": {
+                  "default": [],
+                  "description": "Alternative canonical investors or accelerators backing the current company. Use Y Combinator, Andreessen Horowitz, and Techstars rather than YC or a16z.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "currentCompanyHiringRolesAny": {
+                  "default": [],
+                  "description": "Alternative role phrases the current company must have an open job posting for right now, such as Head of Growth or Sales Development Representative. This is a hiring signal about the company, not the person's own title.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "currentCompanyHiringPostedWithinDays": {
+                  "description": "How recent the open job posting must be, in days. Defaults to 30 when hiring roles are given.",
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 365
+                },
+                "excludedCurrentFunctionsAny": {
+                  "default": [],
+                  "description": "Canonical current job functions that must be excluded.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "excludedCurrentSenioritiesAny": {
+                  "default": [],
+                  "description": "Canonical current seniority levels that must be excluded.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "excludedCurrentCompanyNamesAny": {
+                  "default": [],
+                  "description": "Exact current-employer names that must be excluded.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "excludedCurrentCompanyTypesAny": {
+                  "default": [],
+                  "description": "Canonical company ownership types that must be excluded.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                }
+              },
+              "required": [
+                "currentTitleIncludesAny"
+              ],
+              "additionalProperties": false
+            },
+            "semanticQuery": {
+              "description": "A plain-language description of company product, workload, responsibility, business-model, and other contextual fit. Put descriptive requirements and preferences here, not in hard filters.",
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 2000
+            },
+            "defaultSequenceId": {
+              "default": null,
+              "description": "The active sequence intended for selected people, or null.",
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "required": [
+            "name",
+            "candidateCount",
+            "hardFilters"
+          ],
+          "additionalProperties": false
+        },
+        "playId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "expectedRevision": {
+          "description": "Required with targeting when revising an existing playId.",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "confirmed": {
+          "default": false,
+          "type": "boolean"
+        },
+        "sequenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "requestId"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "title": "Find people",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "anthropic/requiresUserInteraction": true
+    }
+  },
+  {
+    "name": "review_people",
+    "title": "Review found people",
+    "description": "Without decisions: read one review batch with its candidates and saved choices. With decisions: record the customer's explicit good_fit and not_a_fit choices; a top-level sequenceId applies to every good fit, finish=true completes the review and queues good fits into the sequence. For add all, mark every candidate good_fit with finish=true. Sends nothing in this call.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "batchId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "requestId": {
+          "description": "Required with decisions.",
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,119}$"
+        },
+        "sequenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "decisions": {
+          "minItems": 1,
+          "maxItems": 100,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "candidateId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "good_fit",
+                  "not_a_fit"
+                ]
+              },
+              "sequenceId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "feedbackReason": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              },
+              "feedbackNote": {
+                "type": "string",
+                "maxLength": 1000
+              }
+            },
+            "required": [
+              "candidateId",
+              "decision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "finish": {
+          "default": false,
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "batchId"
+      ]
+    },
+    "annotations": {
+      "title": "Review found people",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "_meta": {
+      "anthropic/requiresUserInteraction": true
+    }
+  },
+  {
+    "name": "reach_post_engagers",
+    "title": "Reach everyone who engaged with a LinkedIn or X post",
+    "description": "LinkedIn post URL plus message: PumpGTM creates a Play with its own approved sequence (note-less connection request, then your message), fetches every reactor and commenter in the background (up to 500), and enrolls all of them; call again with only playId for progress. X post URL (x.com/\u2026/status/\u2026) plus message, or plus an existing X sequenceId: its likers and repliers are collected into Lead Universe for review as they engage, from now on; the customer adds the ones they want to that X sequence there (or with add_to_sequence). followers=true instead of a post URL does the same for the account's new followers (workspaces with the X channel; call again with only watchId for people waiting for review, DMs sent, replies). Nothing is enrolled or sent in this call.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "postUrl": {
+          "type": "string",
+          "maxLength": 2000,
+          "format": "uri"
+        },
+        "followers": {
+          "description": "X only: collect the account's new followers for review instead of a post's engagers.",
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "sequenceId": {
+          "description": "X posts only: an existing X DM sequence instead of a new one from message.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "playId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "watchId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      }
+    },
+    "annotations": {
+      "title": "Reach everyone who engaged with a LinkedIn or X post",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "anthropic/requiresUserInteraction": true
+    }
+  },
+  {
+    "name": "x_account",
+    "title": "Act as the connected X account",
+    "description": "One action from a connected X account: follow a person (target is an X profile URL or @handle), or like or repost one post (target is an X post URL). `as` picks which connected account acts when the workspace has several (get_workspace view=x_posts lists them); default is the first connected. Needs the X channel. It never sends a DM or writes a new post.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "follow",
+            "like",
+            "repost"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 2000
+        },
+        "as": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+        }
+      },
+      "required": [
+        "action",
+        "target"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "title": "Act as the connected X account",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "research_competitor",
+    "title": "Research a competitor's customers",
+    "description": "With websiteUrl and competitorName: read that site's public case studies in the background and add every named customer account and quoted person to the account universe, each cited to its source page; optional roles retrieve a broad pool of current employees, then product-aware AI keeps the strongest evidence-backed people for review. Supply productBrief when the Play promotes a different product or the workspace has no confirmed profile. Without websiteUrl and competitorName: list the sourced account universe (optional playId narrows to one competitor and reports research status). Review material only; enrolls and contacts no one.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "websiteUrl": {
+          "type": "string",
+          "maxLength": 2000,
+          "format": "uri"
+        },
+        "competitorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "roles": {
+          "maxItems": 16,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "productBrief": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "maxCaseStudies": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 80
+        },
+        "maxPeopleTotal": {
+          "default": 100,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "playId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "limit": {
+          "default": 200,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      }
+    },
+    "annotations": {
+      "title": "Research a competitor's customers",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "reach_universe",
+    "title": "Take universe people into an email campaign or a LinkedIn sequence",
+    "description": "Pick people from the account universe (by competitor name, playId, or exact candidateIds; notYetEnrolled skips anyone already in LinkedIn outreach) and reach them on one channel. channel=email puts everyone with a known email into one of the workspace's own email campaigns, either campaignId or a new draft named campaignName, and may set the campaign's steps (plain text, {{firstName}} {{company}} {{title}} placeholders, delayDays between steps), schedule, sending mailboxIds (or allMailboxes), and dailyLimit in the same call; people without an email are skipped, and findEmails=true first looks up missing addresses, up to maxEmailLookups and a daily limit. channel=linkedin enrolls them into an active approved sequence by sequenceId through the ordinary paced engine. Nothing is launched or sent in this call.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "channel": {
+          "type": "string",
+          "enum": [
+            "email",
+            "linkedin"
+          ]
+        },
+        "competitor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "playId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "candidateIds": {
+          "maxItems": 1000,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "notYetEnrolled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "campaignId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "campaignName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "findEmails": {
+          "default": false,
+          "type": "boolean"
+        },
+        "maxEmailLookups": {
+          "default": 50,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "steps": {
+          "minItems": 1,
+          "maxItems": 10,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "subject": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000
+              },
+              "delayDays": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 60
+              }
+            },
+            "required": [
+              "subject",
+              "body",
+              "delayDays"
+            ]
+          }
+        },
+        "schedule": {
+          "type": "object",
+          "properties": {
+            "timezone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "from": {
+              "type": "string",
+              "pattern": "^\\d{2}:\\d{2}$"
+            },
+            "to": {
+              "type": "string",
+              "pattern": "^\\d{2}:\\d{2}$"
+            },
+            "days": {
+              "minItems": 1,
+              "maxItems": 7,
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 6
+              }
+            }
+          },
+          "required": [
+            "timezone",
+            "from",
+            "to",
+            "days"
+          ]
+        },
+        "mailboxIds": {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "allMailboxes": {
+          "default": false,
+          "type": "boolean"
+        },
+        "dailyLimit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000
+        },
+        "sequenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "channel"
+      ]
+    },
+    "annotations": {
+      "title": "Take universe people into an email campaign or a LinkedIn sequence",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "anthropic/requiresUserInteraction": true
+    }
+  },
+  {
+    "name": "add_to_sequence",
+    "title": "Add universe people to a sequence (LinkedIn, email, or both)",
+    "description": "Pick people from the account universe (by competitor name, playId, or exact candidateIds; notYetEnrolled skips anyone already in a sequence) and add them to one sequence: an existing non-archived sequenceId from list_sequences, or a new draft named name built from template linkedin | email | linkedin_email (then edit its steps with save_sequence_draft). Email-only sequences skip people without a known email; mixed sequences keep them and their email steps wait until an address is known; findEmails=true first looks up missing addresses, metered. Adding never approves, launches, or sends: the customer approves and starts the sequence with set_sequence_status.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "competitor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "playId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "candidateIds": {
+          "maxItems": 1000,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "notYetEnrolled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "sequenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "template": {
+          "type": "string",
+          "enum": [
+            "linkedin",
+            "email",
+            "linkedin_email",
+            "linkedin_email_parallel"
+          ]
+        },
+        "findEmails": {
+          "default": false,
+          "type": "boolean"
+        },
+        "maxEmailLookups": {
+          "default": 50,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        }
+      }
+    },
+    "annotations": {
+      "title": "Add universe people to a sequence (LinkedIn, email, or both)",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "anthropic/requiresUserInteraction": true
+    }
+  },
+  {
+    "name": "get_lead_profile",
+    "title": "Read a person's professional profile",
+    "description": "Read source-dated public identities, available employment history, public activity and relationship observations for a lead owned by this workspace. Public profile links and AI interpretations require review. This does not fetch providers, change identities, enroll or contact anyone.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "leadId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "leadId"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "title": "Read a person's professional profile",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "search_known_people",
+    "title": "Search previously observed professional profiles",
+    "description": "Search a company, professional role, or explicitly stated accelerator cohort in permitted shared professional evidence. Returns at most 20 matching identities; coverage is incomplete and includes labelled historical roles and interpretations. This is not a live provider search, does not expose other customers' lists or messages, and does not authorize outreach. Check source dates before recommending someone.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "query": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 120
+        }
+      },
+      "required": [
+        "query"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "title": "Search previously observed professional profiles",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "list_leads",
+    "title": "List leads",
+    "description": "This workspace's leads with LinkedIn and sequence progress. stage is cumulative (reached this milestone or beyond); stageExact is the current position only. Count is exact even when the page is limited. Pass leadId to read one lead in full.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "leadId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "stage": {
+          "type": "string",
+          "enum": [
+            "queued",
+            "resolving",
+            "invited",
+            "accepted",
+            "messaged",
+            "followed_up",
+            "replied",
+            "failed",
+            "skipped"
+          ]
+        },
+        "stageExact": {
+          "type": "string",
+          "enum": [
+            "queued",
+            "resolving",
+            "invited",
+            "accepted",
+            "messaged",
+            "followed_up",
+            "replied",
+            "failed",
+            "skipped"
+          ]
+        },
+        "sequenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "strategyId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "query": {
+          "type": "string",
+          "maxLength": 120
+        },
+        "engagedOnly": {
+          "type": "boolean"
+        },
+        "bookedOnly": {
+          "type": "boolean"
+        },
+        "sinceDays": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 365
+        },
+        "limit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        }
+      }
+    },
+    "annotations": {
+      "title": "List leads",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "add_leads",
+    "title": "Add leads to a sequence",
+    "description": "Queue leads into one approved active sequence: 1 to 500 manual LinkedIn profiles, CSV content, or a saved Sales Navigator list URL. Manual and CSV finish immediately and return added, duplicate, and invalid counts plus stable addedLeadIds. Sales Navigator runs in the background and auto-enrolls; use method=import_status with its batchId to check. Nothing is sent in this call.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "const": "manual"
+            },
+            "requestId": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,119}$",
+              "description": "Stable idempotency key; reuse it only to retry this exact request."
+            },
+            "sequenceId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "leads": {
+              "minItems": 1,
+              "maxItems": 500,
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "linkedinUrl": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 500
+                  },
+                  "person": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "company": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "title": {
+                    "anyOf": [
+                      {
+                        "type": "string",
+                        "maxLength": 200
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "required": [
+                  "linkedinUrl"
+                ],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": [
+            "method",
+            "requestId",
+            "sequenceId",
+            "leads"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "const": "csv"
+            },
+            "requestId": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,119}$",
+              "description": "Stable idempotency key; reuse it only to retry this exact request."
+            },
+            "sequenceId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "csvContent": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 200000
+            }
+          },
+          "required": [
+            "method",
+            "requestId",
+            "sequenceId",
+            "csvContent"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "const": "sales_navigator"
+            },
+            "requestId": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,119}$",
+              "description": "Stable idempotency key; reuse it only to retry this exact request."
+            },
+            "sequenceId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "accountId": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 160
+            },
+            "listUrl": {
+              "type": "string",
+              "maxLength": 500,
+              "format": "uri"
+            }
+          },
+          "required": [
+            "method",
+            "requestId",
+            "sequenceId",
+            "listUrl"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "method": {
+              "type": "string",
+              "const": "import_status"
+            },
+            "batchId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "required": [
+            "method",
+            "batchId"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "annotations": {
+      "title": "Add leads to a sequence",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "remove_leads",
+    "title": "Remove or stop leads",
+    "description": "Only when the customer explicitly asks to undo an add or stop leads. Target lead IDs or one batchId from add_leads. Uncontacted leads leave the queue; contacted leads keep history and get no further automated steps. Sent invitations and messages cannot be reversed.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string",
+              "const": "leads"
+            },
+            "leadIds": {
+              "minItems": 1,
+              "maxItems": 500,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              }
+            }
+          },
+          "required": [
+            "target",
+            "leadIds"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string",
+              "const": "import"
+            },
+            "batchId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            }
+          },
+          "required": [
+            "target",
+            "batchId"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "annotations": {
+      "title": "Remove or stop leads",
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "list_sequences",
+    "title": "List sequences",
+    "description": "Sequences with steps, approval state, status, and exact enrolled-lead counts. Pass sequenceId to read one sequence with its exact revision before editing.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "sequenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      }
+    },
+    "annotations": {
+      "title": "List sequences",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "save_sequence_draft",
+    "title": "Create or edit a sequence draft",
+    "description": "Without sequenceId: create a complete new sequence (name plus ordered steps). With sequenceId and expectedRevision: replace a draft's complete step list; move active or paused sequences to draft first. Steps are connect, message, engage (LinkedIn), email (subject plus body; only when the workspace has email enabled), or x_dm (an X direct message to a post liker; an X sequence is x_dm steps only, for workspaces with the X channel). When any LinkedIn step is present step 0 must be connect; an email-only sequence needs no connect. delayDays counts from the previous step (the step after connect waits for the invite to be accepted) and later steps are skipped once the person replies on any channel. {{firstName}} {{fullName}} {{company}} {{title}} render on both channels. Example mixed flow: connect, message +1d, email +2d, email +2d, email +3d. The result stays a stopped draft that needs approval, then activation, through set_sequence_status.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,119}$",
+          "description": "Stable idempotency key; reuse it only to retry this exact request."
+        },
+        "sequenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "steps": {
+          "minItems": 1,
+          "maxItems": 20,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "stepIndex": {
+                "description": "Optional zero-based position; when supplied it must match the array index.",
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 19
+              },
+              "kind": {
+                "type": "string",
+                "enum": [
+                  "connect",
+                  "message",
+                  "engage",
+                  "email",
+                  "x_dm",
+                  "x_engage",
+                  "instagram_dm"
+                ]
+              },
+              "sendIf": {
+                "description": "X DM steps only: send only to people who followed the account back after an earlier x_engage follow step, or only to people who did not (their DM lands in Message Requests). Omit to DM everyone on the step.",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "followed_back",
+                      "not_followed_back"
+                    ]
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "delayDays": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 30
+              },
+              "subject": {
+                "description": "Email steps only: the subject line ({{firstName}} {{company}} {{title}} placeholders). Required on the first email; a later email with no subject is sent as a Re: in the first email's thread.",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "messageTmpl": {
+                "description": "Required for a message unless every variant supplies messageTmpl; the plain-text body of an email step.",
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 8000
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "actions": {
+                "description": "Required and non-empty only for engage.",
+                "maxItems": 10,
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "follow",
+                        "view_profile",
+                        "like_last_post",
+                        "endorse_first_skill",
+                        "comment_last_post"
+                      ]
+                    },
+                    "count": {
+                      "type": "integer",
+                      "minimum": 1,
+                      "maximum": 3
+                    },
+                    "reaction": {
+                      "type": "string",
+                      "enum": [
+                        "like",
+                        "celebrate",
+                        "support",
+                        "love",
+                        "insightful",
+                        "funny"
+                      ]
+                    },
+                    "text": {
+                      "type": "string",
+                      "maxLength": 1250
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "variants": {
+                "anyOf": [
+                  {
+                    "maxItems": 10,
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "key": {
+                          "type": "string",
+                          "minLength": 1,
+                          "maxLength": 5
+                        },
+                        "weight": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 10000
+                        },
+                        "messageTmpl": {
+                          "type": "string",
+                          "maxLength": 2000
+                        }
+                      },
+                      "required": [
+                        "key",
+                        "weight"
+                      ],
+                      "additionalProperties": false
+                    }
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "tool": {
+                "anyOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "kind": {
+                        "type": "string",
+                        "const": "sendspark"
+                      },
+                      "params": {
+                        "type": "object",
+                        "propertyNames": {
+                          "type": "string",
+                          "maxLength": 40
+                        },
+                        "additionalProperties": {
+                          "type": "string",
+                          "maxLength": 300
+                        }
+                      },
+                      "outputToken": {
+                        "type": "string",
+                        "const": "video_url"
+                      },
+                      "timeoutHours": {
+                        "type": "integer",
+                        "minimum": 1,
+                        "maximum": 168
+                      },
+                      "fallback": {
+                        "type": "string",
+                        "enum": [
+                          "send_without",
+                          "skip_step"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "kind",
+                      "params"
+                    ],
+                    "additionalProperties": false
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            },
+            "required": [
+              "kind",
+              "delayDays"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "executionModel": {
+          "description": "tracks: LinkedIn, email and X steps run as parallel lanes per person (each lane's delayDays count from its own previous step; a person without one channel's handle still gets the others). Needs the workspace's multichannel_tracks feature. Default linear.",
+          "type": "string",
+          "enum": [
+            "linear",
+            "tracks"
+          ]
+        }
+      },
+      "required": [
+        "requestId",
+        "steps"
+      ]
+    },
+    "annotations": {
+      "title": "Create or edit a sequence draft",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "_meta": {
+      "anthropic/requiresUserInteraction": true
+    }
+  },
+  {
+    "name": "set_sequence_status",
+    "title": "Approve, activate, pause, or reopen a sequence or an email campaign",
+    "description": "For a LinkedIn sequence (sequenceId): status=approved records the customer's approval of one exact draft revision (expectedRevision required) and keeps it stopped; active starts outreach for an approved sequence, paused stops it for every enrolled lead, draft reopens it for editing. For an email campaign (emailCampaignId): active launches sending inside its schedule and limits, paused stops it, draft reopens it; approved does not apply. Each is a separate explicit customer decision.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "sequenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "emailCampaignId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "approved",
+            "active",
+            "paused",
+            "draft"
+          ]
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        }
+      },
+      "required": [
+        "status"
+      ]
+    },
+    "annotations": {
+      "title": "Approve, activate, pause, or reopen a sequence or an email campaign",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    },
+    "_meta": {
+      "anthropic/requiresUserInteraction": true
+    }
+  },
+  {
+    "name": "list_pending_replies",
+    "title": "Replies waiting for a decision",
+    "description": "Inbound LinkedIn replies frozen for human review, each with PumpGTM's draft answer. Read-only.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "limit": {
+          "default": 50,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        }
+      }
+    },
+    "annotations": {
+      "title": "Replies waiting for a decision",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "decide_reply",
+    "title": "Apply the customer's reply decision",
+    "description": "Apply one explicit human decision to a pending reply. send, invite, and booking_link contact the prospect; opt_out is permanent. Show the draft and ask the customer first.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "draftId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "decision": {
+          "type": "string",
+          "enum": [
+            "send",
+            "invite",
+            "booking_link",
+            "snooze",
+            "start_sequence",
+            "meeting_booked",
+            "dismiss",
+            "opt_out"
+          ]
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 4000
+        },
+        "days": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365
+        },
+        "decidedBy": {
+          "default": "mcp",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        }
+      },
+      "required": [
+        "draftId",
+        "decision"
+      ]
+    },
+    "annotations": {
+      "title": "Apply the customer's reply decision",
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "anthropic/requiresUserInteraction": true
+    }
+  }
+]
