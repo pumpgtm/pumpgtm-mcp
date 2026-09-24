@@ -1,16 +1,54 @@
-# PumpGTM MCP server
+<p align="center"><a href="https://pumpgtm.com"><img src="assets/banner.png" alt="PumpGTM" width="100%"></a></p>
 
-**Run LinkedIn, email and X outreach from any AI agent.** PumpGTM is the GTM engineering layer under your agent: it finds the buyers showing intent this week, drafts and sends the outreach from your own accounts inside each platform's limits, and hands every reply back to a human. This repository is the public reference for the hosted MCP server at `https://mcp.pumpgtm.com/mcp`.
+<h1 align="center">PumpGTM MCP server</h1>
 
-- Website: https://pumpgtm.com
-- Live docs: https://pumpgtm.com/docs/mcp
-- REST API for the same workspace: https://github.com/pumpgtm/pumpgtm-api
-- Platforms and agencies running many workspaces: https://pumpgtm.com/mcp/platforms
-- Agent-readable index: https://pumpgtm.com/llms.txt
+<p align="center"><b>Run LinkedIn, email and X outreach from any AI agent.</b><br>
+PumpGTM finds the buyers showing intent this week, drafts and sends the outreach from your own accounts inside each platform's limits, and hands every reply back to a human. This is the public reference for the hosted MCP server at <code>https://mcp.pumpgtm.com/mcp</code>.</p>
 
-The server is hosted; there is nothing to deploy. Connect a client, or build on it with the MCP SDK and the `tools/list` schema mirrored in [`tools.json`](tools.json).
+<p align="center">
+<a href="https://pumpgtm.com/docs/mcp"><img alt="Docs" src="https://img.shields.io/badge/docs-pumpgtm.com%2Fdocs%2Fmcp-2f5cff"></a>
+<a href="https://modelcontextprotocol.io"><img alt="MCP" src="https://img.shields.io/badge/MCP-Streamable%20HTTP%20%2B%20OAuth%202.1-000000"></a>
+<a href="tools.json"><img alt="Tools" src="https://img.shields.io/badge/tools-24-1f883d"></a>
+<a href="https://github.com/pumpgtm/pumpgtm-api"><img alt="REST API" src="https://img.shields.io/badge/REST%20API-OpenAPI%203.1-6f42c1"></a>
+<a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-MIT-lightgrey"></a>
+</p>
 
-Machine-readable: the live `tools/list` schema is mirrored at [/mcp/tools.json](https://pumpgtm.com/mcp/tools.json). Plain Markdown of this page: [/markdown/pages/docs/mcp.md](https://pumpgtm.com/markdown/pages/docs/mcp.md). New here? Start with the [quickstart](https://pumpgtm.com/docs/quickstart).
+<p align="center">
+<a href="https://pumpgtm.com/docs/quickstart">Quickstart</a> · <a href="https://pumpgtm.com/docs/mcp">Docs</a> · <a href="tools.json">tools.json</a> · <a href="https://github.com/pumpgtm/pumpgtm-api">REST API</a> · <a href="https://pumpgtm.com/mcp/platforms">Platforms and agencies</a> · <a href="https://www.youtube.com/@pumpgtm">YouTube</a>
+</p>
+
+## What your agent is driving
+
+The same workspace the dashboard shows. Plays find people, sequences reach them across LinkedIn, email and X, and every reply waits for a human.
+
+<p align="center"><img src="assets/plays.png" alt="PumpGTM Plays: describe who you want, start from a list, or reach everyone who engaged with a post" width="100%"></p>
+<p align="center"><img src="assets/sequences.png" alt="A running PumpGTM sequence with its funnel and message variants" width="100%"></p>
+
+## How it fits together
+
+```mermaid
+flowchart LR
+  A[Your AI agent<br/>Claude, Cursor, Codex, your own] -- MCP over Streamable HTTP --> M[mcp.pumpgtm.com]
+  M --> W[Your PumpGTM workspace]
+  W -- find_people --> P[Buyers showing intent]
+  W -- sequences --> L[LinkedIn]
+  W -- sequences --> E[Email]
+  W -- sequences --> X[X]
+  L & E & X -- replies --> R[Human decides]
+  R -- webhook reply.received --> A
+```
+
+## Watch
+
+<table>
+<tr>
+<td width="33%" align="center"><a href="https://pumpgtm.com/blog/run-a-linkedin-sales-team-with-claude"><img src="https://img.youtube.com/vi/_bHLnE9m-ns/hqdefault.jpg" alt="How to run an entire LinkedIn sales team with Claude" width="100%"></a><br><sub><b>Run an entire LinkedIn sales team with Claude</b><br>Namanyay, founder</sub></td>
+<td width="33%" align="center"><a href="https://pumpgtm.com/blog/what-is-pumpgtm-how-it-works"><img src="https://img.youtube.com/vi/wEb9ZDUIsc0/hqdefault.jpg" alt="What is PumpGTM and how does it work" width="100%"></a><br><sub><b>What is PumpGTM, and how does it actually work?</b><br>4 minute walkthrough</sub></td>
+<td width="33%" align="center"><a href="https://www.youtube.com/watch?v=iVmfRxvEQuE"><img src="https://img.youtube.com/vi/iVmfRxvEQuE/hqdefault.jpg" alt="Claude can send LinkedIn DMs for you now" width="100%"></a><br><sub><b>Claude can send LinkedIn DMs for you now</b><br>Independent creator, MCP walkthrough</sub></td>
+</tr>
+</table>
+
+More on the [PumpGTM YouTube channel](https://www.youtube.com/@pumpgtm) and in [PumpGTM in the wild](https://pumpgtm.com/customers/videos), videos founders and creators made on their own channels.
 
 ## Connect
 
@@ -64,6 +102,9 @@ Reporting: `get_workspace` (`view: "summary"` for the funnel and account pacing,
 ## Versioning
 
 Tools scheduled for removal say so in their description for at least 90 days before leaving `tools/list`. There is no fixed rate limit on the MCP server today; discovery is paced by each workspace's daily provider budget.
+
+<details>
+<summary><b>Tool reference: all 24 tools, arguments and modes</b> (generated from the live <code>tools/list</code>)</summary>
 
 ## Tool reference
 
@@ -388,6 +429,8 @@ Append a dated note, meeting, reply, product engagement, risk, or milestone, wit
 | `source_url` | uri | required.  |
 
 
+</details>
+
 ## Not on this server yet
 
 - Managing several client workspaces from one connection. Today one key is one workspace. The agency layer is in progress; write to hello@pumpgtm.com.
@@ -395,13 +438,23 @@ Append a dated note, meeting, reply, product engagement, risk, or milestone, wit
 
 Questions: hello@pumpgtm.com.
 
-## Learn more
 
-- Quickstart, five minutes from key to first call: https://pumpgtm.com/docs/quickstart
-- Watch it: [How to run an entire LinkedIn sales team with Claude](https://pumpgtm.com/blog/run-a-linkedin-sales-team-with-claude) and the [PumpGTM YouTube channel](https://www.youtube.com/@pumpgtm)
-- Founders and creators using it, on their own channels: https://pumpgtm.com/customers/videos
-- Guides: [LinkedIn outbound playbook, 30+ enterprise meetings a week](https://pumpgtm.com/blog/linkedin-outbound-playbook-enterprise-meetings), [LinkedIn outreach tools with an MCP server](https://pumpgtm.com/best/linkedin-outreach-tools-with-mcp-server), [AI GTM engine: the closed-loop system we run for YC startups](https://pumpgtm.com/blog/ai-gtm-engine-closed-loop-system)
-- Agencies and platforms with many client workspaces: https://pumpgtm.com/mcp/platforms
-- Everything an agent needs in one file: https://pumpgtm.com/llms.txt
+## Guides and reading
 
-Built by [Giga Next Inc.](https://pumpgtm.com/about), San Francisco. Questions: hello@pumpgtm.com.
+| If you want to | Read |
+|---|---|
+| Understand the closed loop behind the tools | [AI GTM engine: the system we run for YC startups](https://pumpgtm.com/blog/ai-gtm-engine-closed-loop-system) |
+| Book meetings from LinkedIn at scale | [LinkedIn outbound playbook: 30+ enterprise meetings a week](https://pumpgtm.com/blog/linkedin-outbound-playbook-enterprise-meetings) |
+| Write the first message | [A cold message that gets replies: 3 rules from 10+ YC startups](https://pumpgtm.com/blog/cold-message-that-gets-replies-three-rules) |
+| Compare MCP-capable outreach tools | [LinkedIn outreach tools with an MCP server (2026)](https://pumpgtm.com/best/linkedin-outreach-tools-with-mcp-server) |
+| Score leads before you reach out | [LinkedIn lead scoring: filter leads before outreach](https://pumpgtm.com/blog/linkedin-lead-scoring-before-outreach) |
+| See a customer result | [How PumpGTM helped Supermemory find customers](https://pumpgtm.com/blog/how-pumpgtm-helped-supermemory-find-customers) |
+| Give many users or clients their own workspace | [PumpGTM for platforms and agencies](https://pumpgtm.com/mcp/platforms) |
+| Hand an agent everything at once | [pumpgtm.com/llms.txt](https://pumpgtm.com/llms.txt) |
+
+---
+
+<p align="center">
+<a href="https://pumpgtm.com">pumpgtm.com</a> · <a href="https://pumpgtm.com/docs">Docs</a> · <a href="https://app.pumpgtm.com/onboarding">Start a workspace</a> · <a href="https://x.com/pumpgtm">X</a> · <a href="https://www.youtube.com/@pumpgtm">YouTube</a> · <a href="mailto:hello@pumpgtm.com">hello@pumpgtm.com</a><br>
+<sub>Built by <a href="https://pumpgtm.com/about">Giga Next Inc.</a>, San Francisco. Documentation and schemas in this repository are MIT licensed; the hosted service is a commercial product.</sub>
+</p>
