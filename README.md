@@ -38,13 +38,12 @@ flowchart LR
   R -- webhook reply.received --> A
 ```
 
-## Watch
+## Watch and read
 
 <table>
 <tr>
-<td width="33%" align="center"><a href="https://pumpgtm.com/blog/run-a-linkedin-sales-team-with-claude"><img src="https://img.youtube.com/vi/_bHLnE9m-ns/hqdefault.jpg" alt="How to run an entire LinkedIn sales team with Claude" width="100%"></a><br><sub><b>Run an entire LinkedIn sales team with Claude</b><br>Namanyay, founder</sub></td>
-<td width="33%" align="center"><a href="https://pumpgtm.com/blog/what-is-pumpgtm-how-it-works"><img src="https://img.youtube.com/vi/wEb9ZDUIsc0/hqdefault.jpg" alt="What is PumpGTM and how does it work" width="100%"></a><br><sub><b>What is PumpGTM, and how does it actually work?</b><br>4 minute walkthrough</sub></td>
-<td width="33%" align="center"><a href="https://www.youtube.com/watch?v=iVmfRxvEQuE"><img src="https://img.youtube.com/vi/iVmfRxvEQuE/hqdefault.jpg" alt="Claude can send LinkedIn DMs for you now" width="100%"></a><br><sub><b>Claude can send LinkedIn DMs for you now</b><br>Independent creator, MCP walkthrough</sub></td>
+<td width="50%" align="center"><a href="https://pumpgtm.com/blog/what-is-pumpgtm-how-it-works"><img src="https://img.youtube.com/vi/wEb9ZDUIsc0/hqdefault.jpg" alt="What is PumpGTM and how does it work" width="100%"></a><br><sub><b>What is PumpGTM, and how does it actually work?</b><br>4 minute walkthrough</sub></td>
+<td width="50%" align="center"><a href="https://x.com/NamanyayG/article/2100996660314902546"><img src="https://pumpgtm.com/blog/linkedin-lead-scoring-before-outreach.jpg" alt="GTM engineering: why a lead is fit, timing, intent and confidence" width="100%"></a><br><sub><b>GTM engineering: why a lead is fit, timing, intent and confidence</b><br>Namanyay's article on X, the scoring model behind find_people. <a href="https://pumpgtm.com/blog/gtm-engineering-lead-scoring">Read on pumpgtm.com</a></sub></td>
 </tr>
 </table>
 
