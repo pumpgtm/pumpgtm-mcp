@@ -19,5 +19,7 @@
     "gtm",
     "mcp"
   ],
-  "privacyPolicyUrl": "https://pumpgtm.com/privacy-policy"
+  "privacyPolicyUrl": "https://pumpgtm.com/privacy-policy",
+  "supportUrl": "https://pumpgtm.com/contact",
+  "termsOfServiceUrl": "https://pumpgtm.com/terms-of-service"
 }
