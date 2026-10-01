@@ -1,0 +1,11 @@
+{
+  "name": "pumpgtm",
+  "displayName": "PumpGTM",
+  "version": "1.0.0",
+  "description": "Find buyers and run LinkedIn, email and X outreach from your AI, answer replies, and draft cold messages from a library of the most-liked cold messages on X.",
+  "author": { "name": "PumpGTM", "email": "hello@pumpgtm.com", "url": "https://pumpgtm.com" },
+  "homepage": "https://pumpgtm.com/docs/mcp",
+  "repository": "https://github.com/pumpgtm/pumpgtm-mcp",
+  "license": "MIT",
+  "keywords": ["sales", "outbound", "linkedin", "cold-email", "gtm", "mcp"]
+}

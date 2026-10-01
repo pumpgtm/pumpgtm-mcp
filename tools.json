@@ -488,7 +488,7 @@
   {
     "name": "get_workspace",
     "title": "Workspace status",
-    "description": "Start here. Summary: setup state (LinkedIn, billing, finish-setup link), LinkedIn progress, Plays, eligible sequences, unfinished review, pending replies count, and (when the workspace has the email channel) its mailboxes and email campaigns. view=activity reads the append-only LinkedIn activity ledger with filters. view=x_posts lists the connected X account's recent posts with like counts and which sequence, if any, already DMs each post's likers (workspaces with the X channel).",
+    "description": "Start here for account status. Read-only schemaVersion 2 summary: company, billing access, every saved LinkedIn/X/email/Instagram sender with separate connection, health and execution evidence, all Play types and sequence states, review coverage, period-labelled results, discovery allowance and excluded companies. Each section returns state, data and issues; unknown is not disconnected or zero. Lists are bounded previews with totals. Missing optional channels do not block other channels. Follow scoped attention and returned Accounts/Billing/Company links. view=activity reads the workspace audit ledger; view=x_posts separately reads recent X posts from the provider and may refresh that account's grant.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -512,14 +512,21 @@
           "type": "string",
           "maxLength": 160
         },
+        "as": {
+          "description": "view=x_posts only: which connected X account's posts (@handle) when the workspace has several; default the first connected.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
+        },
         "actions": {
-          "maxItems": 66,
+          "maxItems": 73,
           "type": "array",
           "items": {
             "type": "string",
             "enum": [
               "resolve",
               "invite",
+              "invite_withdrawn",
               "accepted",
               "like",
               "message",
@@ -544,9 +551,14 @@
               "x_follow",
               "x_like",
               "x_follow_back",
+              "x_unfollow",
+              "x_lookup_cached",
+              "memory_search",
               "x_follow_back_scan",
               "x_credit_balance",
               "x_reply_subscription",
+              "x_follow_event",
+              "x_auto_accept",
               "instagram_dm",
               "instagram_comment",
               "track_unavailable",
@@ -565,6 +577,7 @@
               "email_campaign_added",
               "email_sent",
               "email_replied",
+              "email_auto_reply",
               "email_skipped",
               "email_bounced",
               "email_unsubscribed",
@@ -613,7 +626,7 @@
   {
     "name": "find_people",
     "title": "Find people",
-    "description": "Create or revise a Play from targeting and run it. Targeting may include a hiring signal (currentCompanyHiringRolesAny): the person's current company must have an open job posting for one of those roles, posted within currentCompanyHiringPostedWithinDays. Without confirmed=true it only saves the Play and returns the targeting summary for the customer to confirm. An unresolved required company is preserved in the saved draft and returned under companyResolution; the Play cannot run until the customer corrects or explicitly removes it in a revision. With confirmed=true, a ready Play runs discovery and returns candidates in retrieval order. Pass playId alone to rerun an existing ready Play. Optional sequenceId sets the Play's default sequence. Creates no leads and contacts no one.",
+    "description": "Create or revise a Play from targeting and run it. Targeting may include a hiring signal (currentCompanyHiringRolesAny): the person's current company must have an open job posting for one of those roles, posted within currentCompanyHiringPostedWithinDays. Without confirmed=true it only saves the Play and returns the targeting summary for the customer to confirm. Company names are resolved automatically and never block: when several companies share a name, an exclusion covers all of them and a required company includes every strong match; pass a website domain in currentCompanyDomainsAny or a LinkedIn company URL in currentCompanyLinkedInUrlsAny to pin one exactly. The result's companyResolution reports each company's outcome (matched, matched_several, unmatched) with the companies chosen, so you can mention it in one line if useful. With confirmed=true, the Play runs discovery and returns candidates in retrieval order. Pass playId alone to rerun an existing ready Play. Optional sequenceId sets the Play's default sequence. Creates no leads and contacts no one.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -659,24 +672,46 @@
                 },
                 "currentFunctionsAny": {
                   "default": [],
-                  "description": "Alternative canonical current job functions. Use only when non-negotiable.",
+                  "description": "Alternative current job functions. Use only when non-negotiable.",
                   "maxItems": 40,
                   "type": "array",
                   "items": {
                     "type": "string",
-                    "minLength": 1,
-                    "maxLength": 240
+                    "enum": [
+                      "Engineering",
+                      "Sales",
+                      "Consulting",
+                      "Marketing",
+                      "Operations",
+                      "Finance",
+                      "Research",
+                      "Customer Success and Support",
+                      "Arts and Design",
+                      "Human Resources",
+                      "Legal",
+                      "Product Management"
+                    ]
                   }
                 },
                 "currentSenioritiesAny": {
                   "default": [],
-                  "description": "Alternative canonical current seniority levels. Use only when non-negotiable.",
+                  "description": "Alternative current seniority levels. Use only when non-negotiable; put finer wording such as Head of or SVP in semanticQuery.",
                   "maxItems": 40,
                   "type": "array",
                   "items": {
                     "type": "string",
-                    "minLength": 1,
-                    "maxLength": 240
+                    "enum": [
+                      "Owner / Partner",
+                      "CXO",
+                      "Vice President",
+                      "Director",
+                      "Experienced Manager",
+                      "Entry Level Manager",
+                      "Strategic",
+                      "Senior",
+                      "Entry Level",
+                      "In Training"
+                    ]
                   }
                 },
                 "personCountriesAny": {
@@ -703,7 +738,18 @@
                 },
                 "currentCompanyDomainsAny": {
                   "default": [],
-                  "description": "Alternative exact current-employer domains, only for a named account list.",
+                  "description": "Alternative exact current-employer website domains, only for a named account list. A domain pins one company exactly.",
+                  "maxItems": 40,
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 240
+                  }
+                },
+                "currentCompanyLinkedInUrlsAny": {
+                  "default": [],
+                  "description": "Alternative current-employer LinkedIn company URLs (linkedin.com/company/...). A URL pins one company exactly.",
                   "maxItems": 40,
                   "type": "array",
                   "items": {
@@ -980,7 +1026,7 @@
   {
     "name": "reach_post_engagers",
     "title": "Reach everyone who engaged with a LinkedIn or X post",
-    "description": "LinkedIn post URL plus message: PumpGTM creates a Play with its own approved sequence (note-less connection request, then your message), fetches every reactor and commenter in the background (up to 500), and enrolls all of them; call again with only playId for progress. X post URL (x.com/\u2026/status/\u2026) plus message, or plus an existing X sequenceId: its likers and repliers are collected into Lead Universe for review as they engage, from now on; the customer adds the ones they want to that X sequence there (or with add_to_sequence). followers=true instead of a post URL does the same for the account's new followers (workspaces with the X channel; call again with only watchId for people waiting for review, DMs sent, replies). Nothing is enrolled or sent in this call.",
+    "description": "LinkedIn post URL plus message: PumpGTM creates a Play with its own approved sequence (note-less connection request, then your message), fetches every reactor and commenter in the background (up to 500), and enrolls all of them; call again with only playId for progress. X post URL (x.com/…/status/…) plus message, or plus an existing X sequenceId: its likers and repliers are collected into Lead Universe for review as they engage, from now on; the customer adds the ones they want to that X sequence there (or with add_to_sequence). followers=true instead of a post URL does the same for the account's new followers (workspaces with the X channel; call again with only watchId for people waiting for review, DMs sent, replies). Nothing is enrolled or sent in this call.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1019,6 +1065,12 @@
           "type": "string",
           "format": "uuid",
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "as": {
+          "description": "X only: which connected account's post or followers (@handle) when the workspace has several; default the first connected.",
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 20
         }
       }
     },
@@ -1077,7 +1129,7 @@
   {
     "name": "research_competitor",
     "title": "Research a competitor's customers",
-    "description": "With websiteUrl and competitorName: read that site's public case studies in the background and add every named customer account and quoted person to the account universe, each cited to its source page; optional roles retrieve a broad pool of current employees, then product-aware AI keeps the strongest evidence-backed people for review. Supply productBrief when the Play promotes a different product or the workspace has no confirmed profile. Without websiteUrl and competitorName: list the sourced account universe (optional playId narrows to one competitor and reports research status). Review material only; enrolls and contacts no one.",
+    "description": "With websiteUrl and competitorName: read that site's public case studies in the background and add every named customer account and quoted person to the account universe, each cited to its source page; optional roles retrieve a broad pool of current employees, then product-aware AI keeps the strongest evidence-backed people for review. Uses the workspace's company or its active Team's shared company. If neither exists, ask the customer to add their own company website at the returned setupUrl, then retry. Supply productBrief when the Play promotes a different product. Without websiteUrl and competitorName: list the sourced account universe (optional playId narrows to one competitor and reports research status). Review material only; enrolls and contacts no one.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1344,8 +1396,10 @@
           "enum": [
             "linkedin",
             "email",
+            "x",
             "linkedin_email",
-            "linkedin_email_parallel"
+            "linkedin_email_parallel",
+            "all_channels"
           ]
         },
         "findEmails": {
@@ -1484,6 +1538,10 @@
         "bookedOnly": {
           "type": "boolean"
         },
+        "waitingForInput": {
+          "description": "Only people the engine is holding because a message step needs a value from the customer (see leads_waiting_for_input in get_workspace). Each returned lead lists waitingFor keys and waitingSince.",
+          "type": "boolean"
+        },
         "sinceDays": {
           "type": "integer",
           "minimum": 0,
@@ -1609,7 +1667,8 @@
             "csvContent": {
               "type": "string",
               "minLength": 1,
-              "maxLength": 200000
+              "maxLength": 200000,
+              "description": "Comma-separated CSV with a header row; column order does not matter. linkedinUrl (required): A person's HTTPS LinkedIn /in/ profile URL, not a company page, website, or other social profile. Accepted headers: linkedin url, linkedin, linkedin_url, profile url. person (optional): The person's full name. Combine separate first and last name columns when needed. Accepted headers: person, name, full name. company (optional): The person's employer or company name. Accepted headers: company. title (optional): The person's job title or role. Accepted headers: title, role. Headers are case-insensitive. Unrecognized, blank, or overlapping columns block import before any rows are added. For arbitrary headers such as URL or Links, inspect the original values and use method=manual with mapped records. Never infer identity from a header alone or invent missing URLs. Preserve names, employers and titles; disclose unsupported fields you omit. Ask one focused question only when the values cannot resolve ambiguity. Example: Person,LinkedIn URL,Company,Title\nAda,https://www.linkedin.com/in/ada,Example,Founder"
             }
           },
           "required": [
@@ -1686,9 +1745,59 @@
     }
   },
   {
+    "name": "set_lead_input",
+    "title": "Store a per-person value for a held message",
+    "description": "Store a value the customer supplies for one person, such as a link to a video they recorded, so a message step declared with tool customer_input can send. Identify the person by leadId or their LinkedIn profile URL. values maps the sequence's token names (for example video_url) to the customer's text; the key comes from the sequence, the customer never types it. Nothing is sent in this call: the paced engine sends on its next run if the person is at that step, or when they reach it. A value for someone who already replied, finished, or already received that message is refused with nothing changed. The result includes how many people in that sequence are still waiting.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "requestId": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{7,119}$",
+          "description": "Stable idempotency key; reuse it only to retry this exact request."
+        },
+        "leadId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "linkedinUrl": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 500
+        },
+        "values": {
+          "type": "object",
+          "propertyNames": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]{0,39}$"
+          },
+          "additionalProperties": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2000
+          }
+        }
+      },
+      "required": [
+        "requestId",
+        "values"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "title": "Store a per-person value for a held message",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "remove_leads",
     "title": "Remove or stop leads",
-    "description": "Only when the customer explicitly asks to undo an add or stop leads. Target lead IDs or one batchId from add_leads. Uncontacted leads leave the queue; contacted leads keep history and get no further automated steps. Sent invitations and messages cannot be reversed.",
+    "description": "Only when the customer explicitly asks to undo an add or stop leads. Target lead IDs, one batchId from add_leads, or target=companies with employer names: those go on the workspace do-not-contact list (shown in get_workspace), every Play stops finding people there, no lead at those employers is ever added again, and everyone already queued there is removed. Uncontacted leads leave the queue; contacted leads keep history and get no further automated steps. Sent invitations and messages cannot be reversed.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1735,6 +1844,30 @@
             "batchId"
           ],
           "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "target": {
+              "type": "string",
+              "const": "companies"
+            },
+            "companies": {
+              "minItems": 1,
+              "maxItems": 100,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 240
+              }
+            }
+          },
+          "required": [
+            "target",
+            "companies"
+          ],
+          "additionalProperties": false
         }
       ]
     },
@@ -1771,7 +1904,7 @@
   {
     "name": "save_sequence_draft",
     "title": "Create or edit a sequence draft",
-    "description": "Without sequenceId: create a complete new sequence (name plus ordered steps). With sequenceId and expectedRevision: replace a draft's complete step list; move active or paused sequences to draft first. Steps are connect, message, engage (LinkedIn), email (subject plus body; only when the workspace has email enabled), or x_dm (an X direct message to a post liker; an X sequence is x_dm steps only, for workspaces with the X channel). When any LinkedIn step is present step 0 must be connect; an email-only sequence needs no connect. delayDays counts from the previous step (the step after connect waits for the invite to be accepted) and later steps are skipped once the person replies on any channel. {{firstName}} {{fullName}} {{company}} {{title}} render on both channels. Example mixed flow: connect, message +1d, email +2d, email +2d, email +3d. The result stays a stopped draft that needs approval, then activation, through set_sequence_status.",
+    "description": "Without sequenceId: create a complete new sequence (name plus ordered steps); the customer's request is the approval, so it is approved and live when this returns. With sequenceId and expectedRevision: replace a sequence's complete step list; the new revision is approved and the sequence returns to its previous status (active stays active, paused stays paused, a draft goes live). Steps are connect, message, engage (LinkedIn), email (subject plus body; only when the workspace has email enabled), or x_dm (an X direct message to a post liker; an X sequence is x_dm steps only, for workspaces with the X channel). When any LinkedIn step is present step 0 must be connect; an email-only sequence needs no connect. delayDays counts from the previous step (the step after connect waits for the invite to be accepted) and later steps are skipped once the person replies on any channel. {{firstName}} {{fullName}} {{company}} {{title}} render on both channels. A message step may also carry a per-person value the customer supplies later (for example {{video_url}}); declare it with tool { kind: \"customer_input\", tokens: [...] } and the step holds each person until set_lead_input stores the value. Example mixed flow: connect, message +1d, email +2d, email +2d, email +3d. Nothing is sent in this call; people added later enter the paced queue. Give the customer the result's reviewUrl to review or pause the sequence.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1878,6 +2011,7 @@
                       "type": "string",
                       "enum": [
                         "follow",
+                        "unfollow",
                         "view_profile",
                         "like_last_post",
                         "endorse_first_skill",
@@ -1949,45 +2083,73 @@
               "tool": {
                 "anyOf": [
                   {
-                    "type": "object",
-                    "properties": {
-                      "kind": {
-                        "type": "string",
-                        "const": "sendspark"
-                      },
-                      "params": {
+                    "oneOf": [
+                      {
                         "type": "object",
-                        "propertyNames": {
-                          "type": "string",
-                          "maxLength": 40
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "sendspark"
+                          },
+                          "params": {
+                            "type": "object",
+                            "propertyNames": {
+                              "type": "string",
+                              "maxLength": 40
+                            },
+                            "additionalProperties": {
+                              "type": "string",
+                              "maxLength": 300
+                            }
+                          },
+                          "outputToken": {
+                            "type": "string",
+                            "const": "video_url"
+                          },
+                          "timeoutHours": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 168
+                          },
+                          "fallback": {
+                            "type": "string",
+                            "enum": [
+                              "send_without",
+                              "skip_step"
+                            ]
+                          }
                         },
-                        "additionalProperties": {
-                          "type": "string",
-                          "maxLength": 300
-                        }
+                        "required": [
+                          "kind",
+                          "params"
+                        ],
+                        "additionalProperties": false
                       },
-                      "outputToken": {
-                        "type": "string",
-                        "const": "video_url"
-                      },
-                      "timeoutHours": {
-                        "type": "integer",
-                        "minimum": 1,
-                        "maximum": 168
-                      },
-                      "fallback": {
-                        "type": "string",
-                        "enum": [
-                          "send_without",
-                          "skip_step"
-                        ]
+                      {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "const": "customer_input"
+                          },
+                          "tokens": {
+                            "minItems": 1,
+                            "maxItems": 5,
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "pattern": "^[a-z][a-z0-9_]{0,39}$"
+                            },
+                            "description": "Message steps only. The tokens in this step's text that the customer supplies for each person (for example [\"video_url\"] for {{video_url}}). The step holds each person until every token has a value from set_lead_input; there is no timeout. Every non-built-in token in the text must be declared here and vice versa."
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "tokens"
+                        ],
+                        "additionalProperties": false
                       }
-                    },
-                    "required": [
-                      "kind",
-                      "params"
-                    ],
-                    "additionalProperties": false
+                    ]
                   },
                   {
                     "type": "null"
@@ -2029,8 +2191,8 @@
   },
   {
     "name": "set_sequence_status",
-    "title": "Approve, activate, pause, or reopen a sequence or an email campaign",
-    "description": "For a LinkedIn sequence (sequenceId): status=approved records the customer's approval of one exact draft revision (expectedRevision required) and keeps it stopped; active starts outreach for an approved sequence, paused stops it for every enrolled lead, draft reopens it for editing. For an email campaign (emailCampaignId): active launches sending inside its schedule and limits, paused stops it, draft reopens it; approved does not apply. Each is a separate explicit customer decision.",
+    "title": "Pause, resume, reopen, or approve a sequence or an email campaign",
+    "description": "For a LinkedIn sequence (sequenceId): paused stops it for every enrolled lead, active resumes a paused sequence, draft reopens it for editing in the dashboard. status=approved (expectedRevision required) is only for a sequence that is still a draft, for example one created in the dashboard: it records the customer's approval of that exact revision and makes it live in the same call. Sequences created or edited with save_sequence_draft, and drafts people were added to over MCP, are already live and need no approval here. For an email campaign (emailCampaignId): active launches sending inside its schedule and limits, paused stops it, draft reopens it; approved does not apply.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -2065,7 +2227,7 @@
       ]
     },
     "annotations": {
-      "title": "Approve, activate, pause, or reopen a sequence or an email campaign",
+      "title": "Pause, resume, reopen, or approve a sequence or an email campaign",
       "readOnlyHint": false,
       "destructiveHint": false,
       "idempotentHint": true,
@@ -2078,7 +2240,7 @@
   {
     "name": "list_pending_replies",
     "title": "Replies waiting for a decision",
-    "description": "Inbound LinkedIn replies frozen for human review, each with PumpGTM's draft answer. Read-only.",
+    "description": "Inbound replies frozen for human review: LinkedIn and email ones carry PumpGTM's draft answer; X ones (channel x) have no draft and are answered in X at replyUrl. Read-only.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -2093,6 +2255,29 @@
     },
     "annotations": {
       "title": "Replies waiting for a decision",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "get_cold_message_examples",
+    "title": "Example cold messages",
+    "description": "A random sample from PumpGTM's library of the most-liked public posts on X about writing cold emails and DMs, each with its link and why it was kept. Use them as references when drafting or critiquing a cold message; credit the author and do not copy them word for word. Read-only.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "count": {
+          "default": 5,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        }
+      }
+    },
+    "annotations": {
+      "title": "Example cold messages",
       "readOnlyHint": true,
       "destructiveHint": false,
       "openWorldHint": false

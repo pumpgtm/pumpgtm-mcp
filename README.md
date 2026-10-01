@@ -72,10 +72,21 @@ await client.connect(
     requestInit: { headers: { Authorization: `Bearer ${process.env.PUMPGTM_KEY}` } },
   }),
 );
-const { tools } = await client.listTools(); // 24 tools, listed below
+const { tools } = await client.listTools(); // up to 26 tools, listed below
 ```
 
 Codex: `codex mcp add pumpgtm --url https://mcp.pumpgtm.com/mcp` then `codex mcp login pumpgtm`. Claude Code: `claude mcp add --transport http pumpgtm https://mcp.pumpgtm.com/mcp --header "Authorization: Bearer eve_mcp_.."`.
+
+## Install as a plugin
+
+The PumpGTM plugin bundles this server with three skills: write a cold message, find buyers, and handle replies. In Claude Code:
+
+```
+/plugin marketplace add pumpgtm/pumpgtm-mcp
+/plugin install pumpgtm@pumpgtm
+```
+
+Then run `/mcp` and sign in to PumpGTM. The plugin's manifest, skills and server config live in [github.com/pumpgtm/pumpgtm-mcp](https://github.com/pumpgtm/pumpgtm-mcp).
 
 ## How results come back
 
@@ -263,6 +274,16 @@ Apply one explicit human decision to a pending reply. send, invite, and booking_
 | `text` | string |  |
 | `days` | integer | range 1 to 365.  |
 | `decidedBy` | string | default `"mcp"`.  |
+
+### Cold messages
+
+#### get_cold_message_examples (read only)
+
+A random sample from PumpGTM's library of the most-liked public posts on X about writing cold emails and DMs, each with its link and why it was kept. Use them as references when drafting or critiquing a cold message; credit the author and do not copy them word for word.
+
+| Argument | Type | Notes |
+|---|---|---|
+| `count` | integer | default `5`, range 1 to 10.  |
 
 ### Post engagers and X (X tools need the X channel)
 

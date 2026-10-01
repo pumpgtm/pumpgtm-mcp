@@ -1,0 +1,17 @@
+{
+  "name": "pumpgtm",
+  "owner": {
+    "name": "PumpGTM",
+    "email": "hello@pumpgtm.com"
+  },
+  "metadata": {
+    "description": "The official PumpGTM plugin: outbound from your AI."
+  },
+  "plugins": [
+    {
+      "name": "pumpgtm",
+      "source": "./",
+      "description": "Find buyers, run outreach, answer replies, and draft better cold messages from your AI."
+    }
+  ]
+}

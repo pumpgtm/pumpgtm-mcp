@@ -1,0 +1,5 @@
+{
+  "mcpServers": {
+    "pumpgtm": { "type": "http", "url": "https://mcp.pumpgtm.com/mcp" }
+  }
+}
