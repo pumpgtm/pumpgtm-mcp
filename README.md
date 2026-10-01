@@ -69,7 +69,7 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 const client = new Client({ name: "your-agent", version: "1.0.0" });
 await client.connect(
   new StreamableHTTPClientTransport(new URL("https://mcp.pumpgtm.com/mcp"), {
-    requestInit: { headers: { Authorization: `Bearer ${process.env.PUMPGTM_KEY}` } },
+    requestInit: { headers: { Authorization: "Bearer YOUR_WORKSPACE_KEY" } },
   }),
 );
 const { tools } = await client.listTools(); // up to 26 tools, listed below
