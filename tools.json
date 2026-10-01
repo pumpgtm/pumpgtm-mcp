@@ -1,5 +1,203 @@
 [
   {
+    "name": "manage_x_play",
+    "title": "Read or change an existing X Play",
+    "description": "List X Plays, get one Play's current revision and audience, or update its name, audience rules, sequence, or running/paused state. Discover the Play first; update requires expectedRevision. Unspecified fields stay unchanged. The sender stays fixed. Audience scope uses existing watches; reach_post_engagers sets up a new source. Pausing a Play stops future audience enrollment, not messages already queued in its sequence; use set_sequence_status to stop those too when requested. Enabling automatic enrollment or resuming may start future outreach through the paced engine. Never connects accounts or sends directly.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "action": {
+          "type": "string",
+          "enum": [
+            "list",
+            "get",
+            "update"
+          ],
+          "description": "Required: list to discover Plays; get to read one; update to apply an explicit change."
+        },
+        "playId": {
+          "description": "Required for get and update. Discover with action=list.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "expectedRevision": {
+          "description": "Required for update. Copy the revision returned by list or get.",
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "active",
+            "paused"
+          ]
+        },
+        "plan": {
+          "type": "object",
+          "properties": {
+            "scope": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "const": "any"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "const": "posts"
+                    },
+                    "postIds": {
+                      "minItems": 1,
+                      "maxItems": 100,
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 40
+                      }
+                    }
+                  },
+                  "required": [
+                    "kind",
+                    "postIds"
+                  ]
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "kind": {
+                      "type": "string",
+                      "const": "followers"
+                    }
+                  },
+                  "required": [
+                    "kind"
+                  ]
+                }
+              ]
+            },
+            "engagements": {
+              "minItems": 1,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "liked",
+                  "replied",
+                  "followed"
+                ]
+              }
+            },
+            "minFollowers": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 9007199254740991
+            },
+            "maxFollowers": {
+              "anyOf": [
+                {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 9007199254740991
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "verifiedOnly": {
+              "type": "boolean"
+            },
+            "bioIncludes": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              }
+            },
+            "bioExcludes": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              }
+            },
+            "locationIncludes": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 120
+              }
+            },
+            "requireBio": {
+              "type": "boolean"
+            },
+            "sequenceId": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            },
+            "autopilot": {
+              "type": "boolean"
+            },
+            "aiCriteria": {
+              "type": "string",
+              "maxLength": 500
+            }
+          },
+          "additionalProperties": false
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "action"
+      ]
+    },
+    "annotations": {
+      "title": "Read or change an existing X Play",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
     "name": "get_pipeline",
     "title": "Sales pipeline",
     "description": "Read your workspace's CRM opportunities and company lifecycle. Money is in minor units and totals are separated by currency. Probabilities are explicit stage/team estimates, not calibrated predictions or verified revenue. Requires the CRM feature.",
@@ -40,6 +238,12 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 100
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       }
     },
@@ -60,6 +264,12 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "properties": {
         "company_id": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
           "type": "string",
           "format": "uuid",
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
@@ -155,6 +365,12 @@
               "type": "null"
             }
           ]
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -286,6 +502,12 @@
               "type": "null"
             }
           ]
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -369,6 +591,12 @@
               "type": "null"
             }
           ]
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -463,6 +691,12 @@
               "type": "null"
             }
           ]
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -519,7 +753,7 @@
           "maxLength": 20
         },
         "actions": {
-          "maxItems": 73,
+          "maxItems": 74,
           "type": "array",
           "items": {
             "type": "string",
@@ -552,6 +786,7 @@
               "x_like",
               "x_follow_back",
               "x_unfollow",
+              "x_repost",
               "x_lookup_cached",
               "memory_search",
               "x_follow_back_scan",
@@ -613,6 +848,12 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 500
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       }
     },
@@ -922,6 +1163,12 @@
           "type": "string",
           "format": "uuid",
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -1007,6 +1254,12 @@
         "finish": {
           "default": false,
           "type": "boolean"
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -1027,7 +1280,7 @@
   {
     "name": "reach_post_engagers",
     "title": "Reach everyone who engaged with a LinkedIn or X post",
-    "description": "LinkedIn post URL plus message: PumpGTM creates a Play with its own approved sequence (note-less connection request, then your message), fetches every reactor and commenter in the background (up to 500), and enrolls all of them; call again with only playId for progress. X post URL (x.com/…/status/…) plus message, or plus an existing X sequenceId: its likers and repliers are collected into Lead Universe for review as they engage, from now on; the customer adds the ones they want to that X sequence there (or with add_to_sequence). followers=true instead of a post URL does the same for the account's new followers (workspaces with the X channel; call again with only watchId for people waiting for review, DMs sent, replies). Nothing is enrolled or sent in this call.",
+    "description": "LinkedIn post URL plus message: PumpGTM creates a Play with its own approved sequence (note-less connection request, then your message), fetches every reactor and commenter in the background (up to 500), and enrolls all of them; call again with only playId for progress. X post URL (x.com/\u2026/status/\u2026) plus message, or plus an existing X sequenceId: creates a real X Play, its audience rules and collection source, and returns its Play link. X defaults to review before enrollment; select engagements when the customer wants only likes or replies. The customer adds selected people to the X sequence (or with add_to_sequence). followers=true instead of a post URL creates a new-followers X Play. A supplied Sequence keeps its status; a message creates an approved active Sequence. Existing shared sources retain their status, Sequence and collection progress. Report polling blockers and paused Sequences exactly as returned; do not promise polling or sending while blocked. Follower Plays can still receive incoming X follow events while fallback polling is blocked. Use manage_x_play to inspect/edit the returned X Play, including enabling autopilot only when the customer requests automatic enrollment. watchId alone checks source/Sequence progress. The X call itself never enrolls or sends.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1040,6 +1293,19 @@
         "followers": {
           "description": "X only: collect the account's new followers for review instead of a post's engagers.",
           "type": "boolean"
+        },
+        "engagements": {
+          "description": "X posts only: liked for likes, replied for replies, both when the customer requests all engagers. Defaults to both.",
+          "minItems": 1,
+          "maxItems": 2,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "liked",
+              "replied"
+            ]
+          }
         },
         "message": {
           "type": "string",
@@ -1072,6 +1338,12 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 20
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       }
     },
@@ -1111,6 +1383,12 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 20
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -1180,6 +1458,12 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 500
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       }
     },
@@ -1334,6 +1618,12 @@
           "type": "string",
           "format": "uuid",
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -1412,6 +1702,12 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 200
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       }
     },
@@ -1435,6 +1731,12 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "properties": {
         "leadId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
           "type": "string",
           "format": "uuid",
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
@@ -1465,6 +1767,12 @@
           "type": "string",
           "minLength": 2,
           "maxLength": 120
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -1554,6 +1862,12 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 500
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       }
     },
@@ -1641,6 +1955,12 @@
                 ],
                 "additionalProperties": false
               }
+            },
+            "workspaceId": {
+              "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             }
           },
           "required": [
@@ -1673,6 +1993,12 @@
               "minLength": 1,
               "maxLength": 200000,
               "description": "Comma-separated CSV with a header row; column order does not matter. linkedinUrl (required): A person's HTTPS LinkedIn /in/ profile URL, not a company page, website, or other social profile. Accepted headers: linkedin url, linkedin, linkedin_url, profile url. person (optional): The person's full name. Combine separate first and last name columns when needed. Accepted headers: person, name, full name. company (optional): The person's employer or company name. Accepted headers: company. title (optional): The person's job title or role. Accepted headers: title, role. Headers are case-insensitive. Unrecognized, blank, or overlapping columns block import before any rows are added. For arbitrary headers such as URL or Links, inspect the original values and use method=manual with mapped records. Never infer identity from a header alone or invent missing URLs. Preserve names, employers and titles; disclose unsupported fields you omit. Ask one focused question only when the values cannot resolve ambiguity. Example: Person,LinkedIn URL,Company,Title\nAda,https://www.linkedin.com/in/ada,Example,Founder"
+            },
+            "workspaceId": {
+              "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             }
           },
           "required": [
@@ -1709,6 +2035,12 @@
               "type": "string",
               "maxLength": 500,
               "format": "uri"
+            },
+            "workspaceId": {
+              "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             }
           },
           "required": [
@@ -1727,6 +2059,12 @@
               "const": "import_status"
             },
             "batchId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "workspaceId": {
+              "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
               "type": "string",
               "format": "uuid",
               "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
@@ -1782,6 +2120,12 @@
             "minLength": 1,
             "maxLength": 2000
           }
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -1822,6 +2166,12 @@
                 "format": "uuid",
                 "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
               }
+            },
+            "workspaceId": {
+              "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             }
           },
           "required": [
@@ -1838,6 +2188,12 @@
               "const": "import"
             },
             "batchId": {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            "workspaceId": {
+              "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
               "type": "string",
               "format": "uuid",
               "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
@@ -1865,6 +2221,12 @@
                 "minLength": 1,
                 "maxLength": 240
               }
+            },
+            "workspaceId": {
+              "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
             }
           },
           "required": [
@@ -1892,6 +2254,12 @@
       "$schema": "https://json-schema.org/draft/2020-12/schema",
       "properties": {
         "sequenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
           "type": "string",
           "format": "uuid",
           "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
@@ -1993,7 +2361,7 @@
                 ]
               },
               "messageTmpl": {
-                "description": "Required for a message unless every variant supplies messageTmpl; the plain-text body of an email step.",
+                "description": "Required for email, X DM and Instagram DM steps; a LinkedIn message can instead supply text on every variant.",
                 "anyOf": [
                   {
                     "type": "string",
@@ -2006,7 +2374,7 @@
                 ]
               },
               "actions": {
-                "description": "Required and non-empty only for engage.",
+                "description": "Required and non-empty for engage or x_engage. X supports follow and unfollow.",
                 "maxItems": 10,
                 "type": "array",
                 "items": {
@@ -2176,6 +2544,12 @@
             "linear",
             "tracks"
           ]
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -2225,6 +2599,12 @@
           "type": "integer",
           "exclusiveMinimum": 0,
           "maximum": 9007199254740991
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
@@ -2255,6 +2635,12 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 200
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       }
     },
@@ -2279,6 +2665,12 @@
           "type": "integer",
           "minimum": 1,
           "maximum": 10
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       }
     },
@@ -2330,6 +2722,12 @@
           "type": "string",
           "minLength": 1,
           "maxLength": 120
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
         }
       },
       "required": [
