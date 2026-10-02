@@ -57,8 +57,8 @@ Endpoint (Streamable HTTP): `https://mcp.pumpgtm.com/mcp`
 
 Two ways to authenticate, both scoped to one workspace:
 
-- **OAuth 2.1** for Claude (web and desktop) and ChatGPT. Add the endpoint as a connector and sign in. Dynamic client registration and PKCE are supported; metadata is at `https://pumpgtm.com/.well-known/oauth-authorization-server`. Access tokens last 30 days, refresh tokens 90.
-- **Workspace key** for Claude Code, Cursor, Codex, the MCP SDKs, or your own agent. Sign in at [app.pumpgtm.com](https://app.pumpgtm.com), open **MCP** in the left nav, and copy the key. Send it as `Authorization: Bearer eve_mcp_..` on every request. The key does not expire. Rotation is not self-serve yet: write to hello@pumpgtm.com and we rotate it for you.
+- **OAuth 2.1** for Claude (web and desktop), Claude Code, Codex, Cursor and ChatGPT. Add the endpoint and sign in; no key is needed. Dynamic client registration and PKCE are supported; metadata is at `https://pumpgtm.com/.well-known/oauth-authorization-server`. Access tokens last 30 days, refresh tokens 90.
+- **Workspace key** for your own agent, the MCP SDKs, and the REST API. Sign in at [app.pumpgtm.com](https://app.pumpgtm.com), open **MCP** in the left nav, and copy the key. Send it as `Authorization: Bearer eve_mcp_..` on every request. The key does not expire. Rotation is not self-serve yet: write to hello@pumpgtm.com and we rotate it for you.
 
 The key's database row fixes the workspace. It cannot read or act on any other workspace.
 
@@ -77,7 +77,7 @@ const { tools } = await client.listTools(); // up to 26 tools, listed below
 
 ChatGPT (until the PumpGTM listing is approved in the ChatGPT directory): in Settings, open **Plugins** and turn on **Developer mode** (Plus, Pro, Business or Enterprise). Click **Plugins** in the sidebar, then **+**: choose **Add MCP Server** in the desktop app, or **Create app** then **Create MCP App** in the browser. Name it PumpGTM, paste `https://mcp.pumpgtm.com/mcp`, keep OAuth, and click **Create**. Sign in to PumpGTM, allow the connection, then ask ChatGPT to find buyers or type @PumpGTM.
 
-Codex: `codex mcp add pumpgtm --url https://mcp.pumpgtm.com/mcp` then `codex mcp login pumpgtm`. Claude Code: `claude mcp add --transport http pumpgtm https://mcp.pumpgtm.com/mcp --header "Authorization: Bearer eve_mcp_.."`.
+Claude Code: `claude mcp add --transport http pumpgtm https://mcp.pumpgtm.com/mcp`, then run `/mcp` (or `claude mcp login pumpgtm`) and sign in. Codex: `codex mcp add pumpgtm --url https://mcp.pumpgtm.com/mcp` then `codex mcp login pumpgtm`. Cursor: add a server with only the URL and sign in when it asks.
 
 ## Install as a plugin
 
