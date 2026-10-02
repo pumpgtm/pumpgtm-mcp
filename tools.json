@@ -1190,7 +1190,7 @@
   {
     "name": "review_people",
     "title": "Review found people",
-    "description": "Without decisions: read one review batch with its candidates and saved choices. With decisions: record the customer's explicit good_fit and not_a_fit choices; a top-level sequenceId applies to every good fit, finish=true completes the review and queues good fits into the sequence. For add all, mark every candidate good_fit with finish=true. Sends nothing in this call.",
+    "description": "Without decisions: read one review batch with its candidates and saved choices. With decisions: record the customer's explicit good_fit and not_a_fit choices; a top-level sequenceId applies to every good fit, finish=true completes the review and queues good fits into the sequence. For add all, mark every candidate good_fit with finish=true. Sends nothing in this call. Open world: people queued into a live sequence are later contacted by its paced steps.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -2089,7 +2089,7 @@
   {
     "name": "set_lead_input",
     "title": "Store a per-person value for a held message",
-    "description": "Store a value the customer supplies for one person, such as a link to a video they recorded, so a message step declared with tool customer_input can send. Identify the person by leadId or their LinkedIn profile URL. values maps the sequence's token names (for example video_url) to the customer's text; the key comes from the sequence, the customer never types it. Nothing is sent in this call: the paced engine sends on its next run if the person is at that step, or when they reach it. A value for someone who already replied, finished, or already received that message is refused with nothing changed. The result includes how many people in that sequence are still waiting.",
+    "description": "Store a value the customer supplies for one person, such as a link to a video they recorded, so a message step declared with tool customer_input can send. Identify the person by leadId or their LinkedIn profile URL. values maps the sequence's token names (for example video_url) to the customer's text; the key comes from the sequence, the customer never types it. Nothing is sent in this call: the paced engine sends on its next run if the person is at that step, or when they reach it. A value for someone who already replied, finished, or already received that message is refused with nothing changed. The result includes how many people in that sequence are still waiting. Open world: the stored value releases a held message to that person, a third party.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -2139,7 +2139,7 @@
       "readOnlyHint": false,
       "destructiveHint": false,
       "idempotentHint": true,
-      "openWorldHint": false
+      "openWorldHint": true
     }
   },
   {
@@ -2277,7 +2277,7 @@
   {
     "name": "save_sequence_draft",
     "title": "Create or edit a sequence draft",
-    "description": "Without sequenceId: create a complete new sequence (name plus ordered steps); the customer's request is the approval, so it is approved and live when this returns. With sequenceId and expectedRevision: replace a sequence's complete step list; the new revision is approved and the sequence returns to its previous status (active stays active, paused stays paused, a draft goes live). Steps are connect, message, engage (LinkedIn), email (subject plus body; only when the workspace has email enabled), or x_dm (an X direct message to a post liker; an X sequence is x_dm steps only, for workspaces with the X channel). When any LinkedIn step is present step 0 must be connect; an email-only sequence needs no connect. delayDays counts from the previous step (the step after connect waits for the invite to be accepted) and later steps are skipped once the person replies on any channel. {{firstName}} {{fullName}} {{company}} {{title}} render on both channels. A message step may also carry a per-person value the customer supplies later (for example {{video_url}}); declare it with tool { kind: \"customer_input\", tokens: [...] } and the step holds each person until set_lead_input stores the value. Example mixed flow: connect, message +1d, email +2d, email +2d, email +3d. Nothing is sent in this call; people added later enter the paced queue. Give the customer the result's reviewUrl to review or pause the sequence.",
+    "description": "Without sequenceId: create a complete new sequence (name plus ordered steps); the customer's request is the approval, so it is approved and live when this returns. With sequenceId and expectedRevision: replace a sequence's complete step list; the new revision is approved and the sequence returns to its previous status (active stays active, paused stays paused, a draft goes live). Steps are connect, message, engage (LinkedIn), email (subject plus body; only when the workspace has email enabled), or x_dm (an X direct message to a post liker; an X sequence is x_dm steps only, for workspaces with the X channel). When any LinkedIn step is present step 0 must be connect; an email-only sequence needs no connect. delayDays counts from the previous step (the step after connect waits for the invite to be accepted) and later steps are skipped once the person replies on any channel. {{firstName}} {{fullName}} {{company}} {{title}} render on both channels. A message step may also carry a per-person value the customer supplies later (for example {{video_url}}); declare it with tool { kind: \"customer_input\", tokens: [...] } and the step holds each person until set_lead_input stores the value. Example mixed flow: connect, message +1d, email +2d, email +2d, email +3d. Nothing is sent in this call; people added later enter the paced queue. Give the customer the result's reviewUrl to review or pause the sequence. Open world: the saved sequence is live, so its steps contact the enrolled people, who are third parties.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -2571,7 +2571,7 @@
   {
     "name": "set_sequence_status",
     "title": "Pause, resume, reopen, or approve a sequence or an email campaign",
-    "description": "For a LinkedIn sequence (sequenceId): paused stops it for every enrolled lead, active resumes a paused sequence, draft reopens it for editing in the dashboard. status=approved (expectedRevision required) is only for a sequence that is still a draft, for example one created in the dashboard: it records the customer's approval of that exact revision and makes it live in the same call. Sequences created or edited with save_sequence_draft, and drafts people were added to over MCP, are already live and need no approval here. For an email campaign (emailCampaignId): active launches sending inside its schedule and limits, paused stops it, draft reopens it; approved does not apply.",
+    "description": "For a LinkedIn sequence (sequenceId): paused stops it for every enrolled lead, active resumes a paused sequence, draft reopens it for editing in the dashboard. status=approved (expectedRevision required) is only for a sequence that is still a draft, for example one created in the dashboard: it records the customer's approval of that exact revision and makes it live in the same call. Sequences created or edited with save_sequence_draft, and drafts people were added to over MCP, are already live and need no approval here. For an email campaign (emailCampaignId): active launches sending inside its schedule and limits, paused stops it, draft reopens it; approved does not apply. Open world: active or approved lets PumpGTM's paced engine send connection requests, messages and emails to the enrolled people, who are third parties.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
