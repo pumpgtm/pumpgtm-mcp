@@ -75,6 +75,8 @@ await client.connect(
 const { tools } = await client.listTools(); // up to 26 tools, listed below
 ```
 
+ChatGPT (until the PumpGTM listing is approved in the ChatGPT directory): in Settings, open **Plugins** and turn on **Developer mode** (Plus, Pro, Business or Enterprise). Click **Plugins** in the sidebar, then **+**: choose **Add MCP Server** in the desktop app, or **Create app** then **Create MCP App** in the browser. Name it PumpGTM, paste `https://mcp.pumpgtm.com/mcp`, keep OAuth, and click **Create**. Sign in to PumpGTM, allow the connection, then ask ChatGPT to find buyers or type @PumpGTM.
+
 Codex: `codex mcp add pumpgtm --url https://mcp.pumpgtm.com/mcp` then `codex mcp login pumpgtm`. Claude Code: `claude mcp add --transport http pumpgtm https://mcp.pumpgtm.com/mcp --header "Authorization: Bearer eve_mcp_.."`.
 
 ## Install as a plugin
@@ -87,6 +89,14 @@ The PumpGTM plugin bundles this server with three skills: write a cold message, 
 ```
 
 Then run `/mcp` and sign in to PumpGTM. The plugin's manifest, skills and server config live in [github.com/pumpgtm/pumpgtm-mcp](https://github.com/pumpgtm/pumpgtm-mcp).
+
+In Codex:
+
+```
+codex plugin marketplace add pumpgtm/pumpgtm-mcp
+codex plugin add pumpgtm@pumpgtm
+codex mcp login pumpgtm
+```
 
 ## How results come back
 
