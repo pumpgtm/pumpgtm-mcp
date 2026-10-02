@@ -1,12 +1,27 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "com.pumpgtm/mcp",
-  "title": "PumpGTM",
+  "title": "PumpGTM MCP server",
   "description": "Find buyers, run LinkedIn, email and X outreach, and answer replies from your AI.",
-  "version": "1.0.0",
-  "websiteUrl": "https://pumpgtm.com/docs/mcp",
-  "repository": { "url": "https://github.com/pumpgtm/pumpgtm-mcp", "source": "github" },
+  "version": "1.0.1",
+  "websiteUrl": "https://pumpgtm.com",
+  "repository": {
+    "url": "https://github.com/pumpgtm/pumpgtm-mcp",
+    "source": "github"
+  },
   "remotes": [
-    { "type": "streamable-http", "url": "https://mcp.pumpgtm.com/mcp" }
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.pumpgtm.com/mcp"
+    }
+  ],
+  "icons": [
+    {
+      "src": "https://pumpgtm.com/icon.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "512x512"
+      ]
+    }
   ]
 }
