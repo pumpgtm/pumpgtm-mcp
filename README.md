@@ -77,7 +77,7 @@ const { tools } = await client.listTools(); // up to 26 tools, listed below
 
 ChatGPT (until the PumpGTM listing is approved in the ChatGPT directory): in Settings, open **Plugins** and turn on **Developer mode** (Plus, Pro, Business or Enterprise). Click **Plugins** in the sidebar, then **+**: choose **Add MCP Server** in the desktop app, or **Create app** then **Create MCP App** in the browser. Name it PumpGTM, paste `https://mcp.pumpgtm.com/mcp`, keep OAuth, and click **Create**. Sign in to PumpGTM, allow the connection, then ask ChatGPT to find buyers or type @PumpGTM.
 
-Claude Code: `claude mcp add --transport http pumpgtm https://mcp.pumpgtm.com/mcp`, then run `/mcp` (or `claude mcp login pumpgtm`) and sign in. Codex: `codex mcp add pumpgtm --url https://mcp.pumpgtm.com/mcp` then `codex mcp login pumpgtm`. Cursor: add a server with only the URL and sign in when it asks.
+Claude Code: `claude mcp add --transport http pumpgtm https://mcp.pumpgtm.com/mcp`, then run `/mcp` (or `claude mcp login pumpgtm`) and sign in. Codex: `codex mcp add pumpgtm --url https://mcp.pumpgtm.com/mcp` then `codex mcp login pumpgtm`. Cursor: add a server with only the URL and sign in when it asks. Cline: add `"pumpgtm": { "type": "streamableHttp", "url": "https://mcp.pumpgtm.com/mcp" }` under `mcpServers` in `cline_mcp_settings.json` and sign in when it asks.
 
 ## Install as a plugin
 
@@ -97,6 +97,14 @@ codex plugin marketplace add pumpgtm/pumpgtm-mcp
 codex plugin add pumpgtm@pumpgtm
 codex mcp login pumpgtm
 ```
+
+In Gemini CLI:
+
+```
+gemini extensions install https://github.com/pumpgtm/pumpgtm-mcp
+```
+
+Then run `/mcp auth pumpgtm` and sign in.
 
 ## How results come back
 
