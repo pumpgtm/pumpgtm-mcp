@@ -475,6 +475,8 @@ Questions: hello@pumpgtm.com.
 
 | If you want to | Read |
 |---|---|
+| Understand what this server automates | [What is an AI SDR? A plain explanation for founders](https://pumpgtm.com/blog/what-is-an-ai-sdr) |
+| Decide your first sales hire | [Your first sales hire: a human SDR, or an AI SDR?](https://pumpgtm.com/blog/first-sales-hire-ai-sdr-vs-human-sdr) |
 | Understand the closed loop behind the tools | [AI GTM engine: the system we run for YC startups](https://pumpgtm.com/blog/ai-gtm-engine-closed-loop-system) |
 | Book meetings from LinkedIn at scale | [LinkedIn outbound playbook: 30+ enterprise meetings a week](https://pumpgtm.com/blog/linkedin-outbound-playbook-enterprise-meetings) |
 | Write the first message | [A cold message that gets replies: 3 rules from 10+ YC startups](https://pumpgtm.com/blog/cold-message-that-gets-replies-three-rules) |
