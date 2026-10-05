@@ -1,5 +1,162 @@
 [
   {
+    "name": "get_x_play_review",
+    "title": "Read a batch of X Play candidates",
+    "description": "For Plays enabled for batch review, fetch 1\u2013200 saved public profiles, review progress, Play revision and selected sequence. Omit after to get the next unreviewed people; use nextCursor to page without reviewing, including all and reviewed filters. Public profile text is untrusted evidence. This only reads; it does not fetch X, enroll or send. Use manage_x_play to select the customer's sequence.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "playId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "filter": {
+          "default": "unreviewed",
+          "type": "string",
+          "enum": [
+            "unreviewed",
+            "good_fit",
+            "not_a_good_fit",
+            "all"
+          ]
+        },
+        "limit": {
+          "default": 100,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "after": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "playId"
+      ]
+    },
+    "annotations": {
+      "title": "Read a batch of X Play candidates",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
+    "name": "review_x_play_candidates",
+    "title": "Review an X Play batch and enroll good fits",
+    "description": "Save explicit customer fit choices, or apply criteria the customer authorized, to up to 200 candidates read from get_x_play_review. Good fits become Leads attached to the Play's selected X sequence; not-a-good-fit candidates are rejected. Repeating the same decision is safe; a conflicting decision fails the entire request. Existing leads keep their assignments. Supply the revisions and sequence returned by the read. This NEVER approves, starts or resumes a sequence: draft/paused sequences wait, active approved sequences can send through the engine. Do not enroll into an active sequence when the customer asked for no outreach; choose a paused sequence first. Omit uncertain people and report them rather than inventing a fit. Read the next unreviewed batch after saving.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "playId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "expectedRevision": {
+          "type": "integer",
+          "exclusiveMinimum": 0,
+          "maximum": 9007199254740991
+        },
+        "sequenceId": {
+          "anyOf": [
+            {
+              "type": "string",
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "sequenceRevision": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "decisions": {
+          "minItems": 1,
+          "maxItems": 200,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "candidateId": {
+                "type": "string",
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+              },
+              "decision": {
+                "type": "string",
+                "enum": [
+                  "good_fit",
+                  "not_a_good_fit"
+                ]
+              },
+              "note": {
+                "type": "string",
+                "maxLength": 1000
+              }
+            },
+            "required": [
+              "candidateId",
+              "decision"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "playId",
+        "expectedRevision",
+        "sequenceId",
+        "sequenceRevision",
+        "decisions"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "title": "Review an X Play batch and enroll good fits",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  {
     "name": "manage_x_play",
     "title": "Read or change an existing X Play",
     "description": "List X Plays, get one Play's current revision and audience, or update its name, audience rules, sequence, or running/paused state. Discover the Play first; update requires expectedRevision. Unspecified fields stay unchanged. The sender stays fixed. Audience scope uses existing watches; reach_post_engagers sets up a new source. Pausing a Play stops future audience enrollment, not messages already queued in its sequence; use set_sequence_status to stop those too when requested. Enabling automatic enrollment or resuming may start future outreach through the paced engine. Never connects accounts or sends directly.",
@@ -720,6 +877,42 @@
     }
   },
   {
+    "name": "enrich_person",
+    "title": "Build a person profile",
+    "description": "Look up one public LinkedIn person URL. Returns professional name, headline, location, current company and title when available. Set includeWorkEmail=true to also find a work email through the data waterfall. Uses workspace Energy; 1 Energy is $0.05. Requires Energy enabled. Returns per-call energyCharged and energyHeld. Missing fields stay null. Check emailCompanyDomainMatch before using the email. Does not create leads or send outreach. Repeated calls can cost Energy; never automatically retry a timeout or error. Use find_people for audience discovery, not this tool.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "linkedinUrl": {
+          "type": "string",
+          "maxLength": 1500
+        },
+        "includeWorkEmail": {
+          "default": false,
+          "type": "boolean"
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "linkedinUrl"
+      ],
+      "additionalProperties": false
+    },
+    "annotations": {
+      "title": "Build a person profile",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
     "name": "get_workspace",
     "title": "Workspace status",
     "description": "Start here for account status. Read-only schemaVersion 2 summary: company, billing access, every saved LinkedIn/X/email/Instagram sender with separate connection, health and execution evidence, all Play types and sequence states, review coverage, period-labelled results, discovery allowance and excluded companies. Each section returns state, data and issues; unknown is not disconnected or zero. Lists are bounded previews with totals. Missing optional channels do not block other channels. Follow scoped attention and returned Accounts/Billing/Company links. view=activity reads the workspace audit ledger; view=x_posts separately reads recent X posts from the provider and may refresh that account's grant.",
@@ -753,7 +946,7 @@
           "maxLength": 20
         },
         "actions": {
-          "maxItems": 74,
+          "maxItems": 75,
           "type": "array",
           "items": {
             "type": "string",
@@ -817,6 +1010,7 @@
               "email_bounced",
               "email_unsubscribed",
               "email_click",
+              "testimonial_submitted",
               "sequence_people_added",
               "lead_replenishment_enabled",
               "lead_replenishment_disabled",
@@ -1280,7 +1474,7 @@
   {
     "name": "reach_post_engagers",
     "title": "Reach everyone who engaged with a LinkedIn or X post",
-    "description": "LinkedIn post URL plus message: PumpGTM creates a Play with its own approved sequence (note-less connection request, then your message), fetches every reactor and commenter in the background (up to 500), and enrolls all of them; call again with only playId for progress. X post URL (x.com/\u2026/status/\u2026) plus message, or plus an existing X sequenceId: creates a real X Play, its audience rules and collection source, and returns its Play link. X defaults to review before enrollment; select engagements when the customer wants only likes or replies. The customer adds selected people to the X sequence (or with add_to_sequence). followers=true instead of a post URL creates a new-followers X Play. A supplied Sequence keeps its status; a message creates an approved active Sequence. Existing shared sources retain their status, Sequence and collection progress. Report polling blockers and paused Sequences exactly as returned; do not promise polling or sending while blocked. Follower Plays can still receive incoming X follow events while fallback polling is blocked. Use manage_x_play to inspect/edit the returned X Play, including enabling autopilot only when the customer requests automatic enrollment. watchId alone checks source/Sequence progress. The X call itself never enrolls or sends.",
+    "description": "LinkedIn post URL plus message: PumpGTM creates a Play with its own approved sequence (note-less connection request, then your message), fetches every reactor and commenter in the background (up to 500), and enrolls all of them; call again with only playId for progress. X post URL (x.com/\u2026/status/\u2026) plus message, or plus an existing X sequenceId: creates a real X Play, its audience rules and collection source, and returns its Play link. X defaults to review before enrollment; select engagements when the customer wants only likes or replies. The customer adds selected people to the X sequence. followers=true instead of a post URL creates a new-followers X Play. A supplied Sequence keeps its status; a message creates an approved active Sequence. Existing shared sources retain their status, Sequence and collection progress. Report polling blockers and paused Sequences exactly as returned; do not promise polling or sending while blocked. Follower Plays can still receive incoming X follow events while fallback polling is blocked. Use manage_x_play to inspect/edit the returned X Play, including enabling autopilot only when the customer requests automatic enrollment. watchId alone checks source/Sequence progress. The X call itself never enrolls or sends.",
     "inputSchema": {
       "type": "object",
       "$schema": "https://json-schema.org/draft/2020-12/schema",
@@ -1403,323 +1597,6 @@
       "destructiveHint": false,
       "idempotentHint": false,
       "openWorldHint": true
-    }
-  },
-  {
-    "name": "research_competitor",
-    "title": "Research a competitor's customers",
-    "description": "With websiteUrl and competitorName: read that site's public case studies in the background and add every named customer account and quoted person to the account universe, each cited to its source page; optional roles retrieve a broad pool of current employees, then product-aware AI keeps the strongest evidence-backed people for review. Uses the workspace's company or its active Team's shared company. If neither exists, ask the customer to add their own company website at the returned setupUrl, then retry. Supply productBrief when the Play promotes a different product. Without websiteUrl and competitorName: list the sourced account universe (optional playId narrows to one competitor and reports research status). Review material only; enrolls and contacts no one.",
-    "inputSchema": {
-      "type": "object",
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "properties": {
-        "websiteUrl": {
-          "type": "string",
-          "maxLength": 2000,
-          "format": "uri"
-        },
-        "competitorName": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160
-        },
-        "roles": {
-          "maxItems": 16,
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 120
-          }
-        },
-        "productBrief": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 4000
-        },
-        "maxCaseStudies": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 80
-        },
-        "maxPeopleTotal": {
-          "default": 100,
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 500
-        },
-        "playId": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-        },
-        "limit": {
-          "default": 200,
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 500
-        },
-        "workspaceId": {
-          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-        }
-      }
-    },
-    "annotations": {
-      "title": "Research a competitor's customers",
-      "readOnlyHint": false,
-      "destructiveHint": false,
-      "idempotentHint": false,
-      "openWorldHint": true
-    }
-  },
-  {
-    "name": "reach_universe",
-    "title": "Take universe people into an email campaign or a LinkedIn sequence",
-    "description": "Pick people from the account universe (by competitor name, playId, or exact candidateIds; notYetEnrolled skips anyone already in LinkedIn outreach) and reach them on one channel. channel=email puts everyone with a known email into one of the workspace's own email campaigns, either campaignId or a new draft named campaignName, and may set the campaign's steps (plain text, {{firstName}} {{company}} {{title}} placeholders, delayDays between steps), schedule, sending mailboxIds (or allMailboxes), and dailyLimit in the same call; people without an email are skipped, and findEmails=true first looks up missing addresses, up to maxEmailLookups and a daily limit. channel=linkedin enrolls them into an active approved sequence by sequenceId through the ordinary paced engine. Nothing is launched or sent in this call.",
-    "inputSchema": {
-      "type": "object",
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "properties": {
-        "channel": {
-          "type": "string",
-          "enum": [
-            "email",
-            "linkedin"
-          ]
-        },
-        "competitor": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160
-        },
-        "playId": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-        },
-        "candidateIds": {
-          "maxItems": 1000,
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          }
-        },
-        "notYetEnrolled": {
-          "default": true,
-          "type": "boolean"
-        },
-        "campaignId": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 120
-        },
-        "campaignName": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 120
-        },
-        "findEmails": {
-          "default": false,
-          "type": "boolean"
-        },
-        "maxEmailLookups": {
-          "default": 50,
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 200
-        },
-        "steps": {
-          "minItems": 1,
-          "maxItems": 10,
-          "type": "array",
-          "items": {
-            "type": "object",
-            "properties": {
-              "subject": {
-                "type": "string",
-                "maxLength": 200
-              },
-              "body": {
-                "type": "string",
-                "minLength": 1,
-                "maxLength": 10000
-              },
-              "delayDays": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 60
-              }
-            },
-            "required": [
-              "subject",
-              "body",
-              "delayDays"
-            ]
-          }
-        },
-        "schedule": {
-          "type": "object",
-          "properties": {
-            "timezone": {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 64
-            },
-            "from": {
-              "type": "string",
-              "pattern": "^\\d{2}:\\d{2}$"
-            },
-            "to": {
-              "type": "string",
-              "pattern": "^\\d{2}:\\d{2}$"
-            },
-            "days": {
-              "minItems": 1,
-              "maxItems": 7,
-              "type": "array",
-              "items": {
-                "type": "integer",
-                "minimum": 0,
-                "maximum": 6
-              }
-            }
-          },
-          "required": [
-            "timezone",
-            "from",
-            "to",
-            "days"
-          ]
-        },
-        "mailboxIds": {
-          "maxItems": 50,
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          }
-        },
-        "allMailboxes": {
-          "default": false,
-          "type": "boolean"
-        },
-        "dailyLimit": {
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 5000
-        },
-        "sequenceId": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-        },
-        "workspaceId": {
-          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-        }
-      },
-      "required": [
-        "channel"
-      ]
-    },
-    "annotations": {
-      "title": "Take universe people into an email campaign or a LinkedIn sequence",
-      "readOnlyHint": false,
-      "destructiveHint": false,
-      "idempotentHint": false,
-      "openWorldHint": true
-    },
-    "_meta": {
-      "anthropic/requiresUserInteraction": true
-    }
-  },
-  {
-    "name": "add_to_sequence",
-    "title": "Add universe people to a sequence (LinkedIn, email, or both)",
-    "description": "Pick people from the account universe (by competitor name, playId, or exact candidateIds; notYetEnrolled skips anyone already in a sequence) and add them to one sequence: an existing non-archived sequenceId from list_sequences, or a new draft named name built from template linkedin | email | linkedin_email (then edit its steps with save_sequence_draft). Email-only sequences skip people without a known email; mixed sequences keep them and their email steps wait until an address is known; findEmails=true first looks up missing addresses, metered. Adding never approves, launches, or sends: the customer approves and starts the sequence with set_sequence_status.",
-    "inputSchema": {
-      "type": "object",
-      "$schema": "https://json-schema.org/draft/2020-12/schema",
-      "properties": {
-        "competitor": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 160
-        },
-        "playId": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-        },
-        "candidateIds": {
-          "maxItems": 1000,
-          "type": "array",
-          "items": {
-            "type": "string",
-            "format": "uuid",
-            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-          }
-        },
-        "notYetEnrolled": {
-          "default": true,
-          "type": "boolean"
-        },
-        "sequenceId": {
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-        },
-        "name": {
-          "type": "string",
-          "minLength": 1,
-          "maxLength": 120
-        },
-        "template": {
-          "type": "string",
-          "enum": [
-            "linkedin",
-            "email",
-            "x",
-            "linkedin_email",
-            "linkedin_email_parallel",
-            "all_channels"
-          ]
-        },
-        "findEmails": {
-          "default": false,
-          "type": "boolean"
-        },
-        "maxEmailLookups": {
-          "default": 50,
-          "type": "integer",
-          "minimum": 1,
-          "maximum": 200
-        },
-        "workspaceId": {
-          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
-          "type": "string",
-          "format": "uuid",
-          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
-        }
-      }
-    },
-    "annotations": {
-      "title": "Add universe people to a sequence (LinkedIn, email, or both)",
-      "readOnlyHint": false,
-      "destructiveHint": false,
-      "idempotentHint": false,
-      "openWorldHint": true
-    },
-    "_meta": {
-      "anthropic/requiresUserInteraction": true
     }
   },
   {
@@ -1948,6 +1825,18 @@
                         "type": "null"
                       }
                     ]
+                  },
+                  "customFields": {
+                    "description": "Per-person values from the customer's own list, keyed by a lowercase token such as personalized_message; written verbatim wherever a message uses {{personalized_message}}. Never generate these values.",
+                    "type": "object",
+                    "propertyNames": {
+                      "type": "string",
+                      "pattern": "^[a-z][a-z0-9_]{0,39}$"
+                    },
+                    "additionalProperties": {
+                      "type": "string",
+                      "maxLength": 1000
+                    }
                   }
                 },
                 "required": [
@@ -1992,7 +1881,19 @@
               "type": "string",
               "minLength": 1,
               "maxLength": 200000,
-              "description": "Comma-separated CSV with a header row; column order does not matter. linkedinUrl (required): A person's HTTPS LinkedIn /in/ profile URL, not a company page, website, or other social profile. Accepted headers: linkedin url, linkedin, linkedin_url, profile url. person (optional): The person's full name. Combine separate first and last name columns when needed. Accepted headers: person, name, full name. company (optional): The person's employer or company name. Accepted headers: company. title (optional): The person's job title or role. Accepted headers: title, role. Headers are case-insensitive. Unrecognized, blank, or overlapping columns block import before any rows are added. For arbitrary headers such as URL or Links, inspect the original values and use method=manual with mapped records. Never infer identity from a header alone or invent missing URLs. Preserve names, employers and titles; disclose unsupported fields you omit. Ask one focused question only when the values cannot resolve ambiguity. Example: Person,LinkedIn URL,Company,Title\nAda,https://www.linkedin.com/in/ada,Example,Founder"
+              "description": "Comma-separated CSV with a header row; column order does not matter. linkedinUrl (required): A person's HTTPS LinkedIn /in/ profile URL, not a company page, website, or other social profile. Accepted headers: linkedin url, linkedin, linkedin_url, profile url. person (optional): The person's full name. Combine separate first and last name columns when needed. Accepted headers: person, name, full name. company (optional): The person's employer or company name. Accepted headers: company. title (optional): The person's job title or role. Accepted headers: title, role. Headers are case-insensitive. Extra per-person columns (for example personalizedMessage or fundingRound) are kept only when customColumns maps each header to a lowercase token such as personalized_message; the value is then written verbatim wherever a message uses {{personalized_message}}, and a blank cell renders empty or as {{token|fallback}}. Other unrecognized, blank, or overlapping columns block import before any rows are added. For arbitrary headers such as URL or Links, inspect the original values and use method=manual with mapped records. Never infer identity from a header alone or invent missing URLs. Preserve names, employers and titles; disclose unsupported fields you omit. Ask one focused question only when the values cannot resolve ambiguity. Example: Person,LinkedIn URL,Company,Title\nAda,https://www.linkedin.com/in/ada,Example,Founder"
+            },
+            "customColumns": {
+              "description": "Extra CSV header \u2192 lowercase token it fills, for example { \"personalizedMessage\": \"personalized_message\" }.",
+              "type": "object",
+              "propertyNames": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "additionalProperties": {
+                "type": "string",
+                "pattern": "^[a-z][a-z0-9_]{0,39}$"
+              }
             },
             "workspaceId": {
               "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
@@ -2545,6 +2446,10 @@
             "tracks"
           ]
         },
+        "xThreadCheck": {
+          "description": "X sequences only. true (the default for a new sequence): before each X DM, check the conversation so nobody the customer already talks to is messaged and the sequence stops on a reply. false, only when the customer asks: messages send without that check, cheaper, for cold lists with no existing contacts. Omit to keep the current setting.",
+          "type": "boolean"
+        },
         "workspaceId": {
           "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
           "type": "string",
@@ -2739,6 +2644,323 @@
       "title": "Apply the customer's reply decision",
       "readOnlyHint": false,
       "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "anthropic/requiresUserInteraction": true
+    }
+  },
+  {
+    "name": "research_competitor",
+    "title": "Research a competitor's customers",
+    "description": "With websiteUrl and competitorName: read that site's public case studies in the background and add every named customer account and quoted person to the account universe, each cited to its source page; optional roles retrieve a broad pool of current employees, then product-aware AI keeps the strongest evidence-backed people for review. Uses the workspace's company or its active Team's shared company. If neither exists, ask the customer to add their own company website at the returned setupUrl, then retry. Supply productBrief when the Play promotes a different product. Without websiteUrl and competitorName: list the sourced account universe (optional playId narrows to one competitor and reports research status). Review material only; enrolls and contacts no one.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "websiteUrl": {
+          "type": "string",
+          "maxLength": 2000,
+          "format": "uri"
+        },
+        "competitorName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "roles": {
+          "maxItems": 16,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "productBrief": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
+        },
+        "maxCaseStudies": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 80
+        },
+        "maxPeopleTotal": {
+          "default": 100,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "playId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "limit": {
+          "default": 200,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      }
+    },
+    "annotations": {
+      "title": "Research a competitor's customers",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  {
+    "name": "reach_universe",
+    "title": "Take universe people into an email campaign or a LinkedIn sequence",
+    "description": "Pick people from the account universe (by competitor name, playId, or exact candidateIds; notYetEnrolled skips anyone already in LinkedIn outreach) and reach them on one channel. channel=email puts everyone with a known email into one of the workspace's own email campaigns, either campaignId or a new draft named campaignName, and may set the campaign's steps (plain text, {{firstName}} {{company}} {{title}} placeholders, delayDays between steps), schedule, sending mailboxIds (or allMailboxes), and dailyLimit in the same call; people without an email are skipped, and findEmails=true first looks up missing addresses, up to maxEmailLookups and a daily limit. channel=linkedin enrolls them into an active approved sequence by sequenceId through the ordinary paced engine. Nothing is launched or sent in this call.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "channel": {
+          "type": "string",
+          "enum": [
+            "email",
+            "linkedin"
+          ]
+        },
+        "competitor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "playId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "candidateIds": {
+          "maxItems": 1000,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "notYetEnrolled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "campaignId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "campaignName": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "findEmails": {
+          "default": false,
+          "type": "boolean"
+        },
+        "maxEmailLookups": {
+          "default": 50,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "steps": {
+          "minItems": 1,
+          "maxItems": 10,
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "subject": {
+                "type": "string",
+                "maxLength": 200
+              },
+              "body": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 10000
+              },
+              "delayDays": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 60
+              }
+            },
+            "required": [
+              "subject",
+              "body",
+              "delayDays"
+            ]
+          }
+        },
+        "schedule": {
+          "type": "object",
+          "properties": {
+            "timezone": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 64
+            },
+            "from": {
+              "type": "string",
+              "pattern": "^\\d{2}:\\d{2}$"
+            },
+            "to": {
+              "type": "string",
+              "pattern": "^\\d{2}:\\d{2}$"
+            },
+            "days": {
+              "minItems": 1,
+              "maxItems": 7,
+              "type": "array",
+              "items": {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 6
+              }
+            }
+          },
+          "required": [
+            "timezone",
+            "from",
+            "to",
+            "days"
+          ]
+        },
+        "mailboxIds": {
+          "maxItems": 50,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "allMailboxes": {
+          "default": false,
+          "type": "boolean"
+        },
+        "dailyLimit": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000
+        },
+        "sequenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      },
+      "required": [
+        "channel"
+      ]
+    },
+    "annotations": {
+      "title": "Take universe people into an email campaign or a LinkedIn sequence",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    },
+    "_meta": {
+      "anthropic/requiresUserInteraction": true
+    }
+  },
+  {
+    "name": "add_to_sequence",
+    "title": "Add universe people to a sequence (LinkedIn, email, or both)",
+    "description": "Pick people from the account universe (by competitor name, playId, or exact candidateIds; notYetEnrolled skips anyone already in a sequence) and add them to one sequence: an existing non-archived sequenceId from list_sequences, or a new draft named name built from template linkedin | email | linkedin_email (then edit its steps with save_sequence_draft). Email-only sequences skip people without a known email; mixed sequences keep them and their email steps wait until an address is known; findEmails=true first looks up missing addresses, metered. Adding never approves, launches, or sends: the customer approves and starts the sequence with set_sequence_status.",
+    "inputSchema": {
+      "type": "object",
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "properties": {
+        "competitor": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "playId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "candidateIds": {
+          "maxItems": 1000,
+          "type": "array",
+          "items": {
+            "type": "string",
+            "format": "uuid",
+            "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+          }
+        },
+        "notYetEnrolled": {
+          "default": true,
+          "type": "boolean"
+        },
+        "sequenceId": {
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "template": {
+          "type": "string",
+          "enum": [
+            "linkedin",
+            "email",
+            "x",
+            "linkedin_email",
+            "linkedin_email_parallel",
+            "all_channels"
+          ]
+        },
+        "findEmails": {
+          "default": false,
+          "type": "boolean"
+        },
+        "maxEmailLookups": {
+          "default": 50,
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 200
+        },
+        "workspaceId": {
+          "description": "Team owner only: an active workspace ID from list_team_workspaces. Omit for your own workspace. Supply on every call for a teammate.",
+          "type": "string",
+          "format": "uuid",
+          "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$"
+        }
+      }
+    },
+    "annotations": {
+      "title": "Add universe people to a sequence (LinkedIn, email, or both)",
+      "readOnlyHint": false,
+      "destructiveHint": false,
       "idempotentHint": false,
       "openWorldHint": true
     },

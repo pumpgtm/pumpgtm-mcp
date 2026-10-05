@@ -1,13 +1,29 @@
 {
   "name": "pumpgtm",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Find buyers, run LinkedIn, email and X outreach, and answer replies from your AI.",
-  "author": { "name": "PumpGTM", "email": "hello@pumpgtm.com" },
+  "author": {
+    "name": "PumpGTM",
+    "email": "hello@pumpgtm.com"
+  },
   "homepage": "https://pumpgtm.com",
   "repository": "https://github.com/pumpgtm/pumpgtm-mcp",
   "license": "MIT",
-  "keywords": ["mcp", "sales", "outbound", "linkedin", "cold-email", "lead-generation", "ai-sdr", "gtm"],
+  "keywords": [
+    "mcp",
+    "sales",
+    "outbound",
+    "linkedin",
+    "cold-email",
+    "lead-generation",
+    "ai-sdr",
+    "gtm"
+  ],
   "logo": ".claude-plugin/icon.png",
   "skills": "skills",
-  "mcpServers": { "pumpgtm": { "url": "https://mcp.pumpgtm.com/mcp" } }
+  "mcpServers": {
+    "pumpgtm": {
+      "url": "https://mcp.pumpgtm.com/mcp"
+    }
+  }
 }

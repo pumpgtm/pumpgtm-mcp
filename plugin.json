@@ -1,7 +1,7 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "pumpgtm",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Find buyers, run LinkedIn, email and X outreach, and answer replies from your AI.",
   "author": {
     "name": "PumpGTM (Giga Next Inc.)",
@@ -11,5 +11,13 @@
   "homepage": "https://pumpgtm.com/docs/mcp",
   "repository": "https://github.com/pumpgtm/pumpgtm-mcp",
   "license": "MIT",
-  "keywords": ["pumpgtm", "sales outreach", "linkedin outreach", "cold email", "lead generation", "ai sdr", "find buyers"]
+  "keywords": [
+    "pumpgtm",
+    "sales outreach",
+    "linkedin outreach",
+    "cold email",
+    "lead generation",
+    "ai sdr",
+    "find buyers"
+  ]
 }
