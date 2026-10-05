@@ -115,6 +115,43 @@ Then run `/mcp auth pumpgtm` and sign in.
 - Metered workspaces carry Energy: one Energy is one person found. `get_workspace` returns `energy` with the monthly allowance, used and remaining, and `find_people` refuses with `energy_exhausted` when a run would exceed it. Workspaces without Energy see no such field. See [Energy](https://pumpgtm.com/docs/api#energy).
 - Nothing reaches LinkedIn, email or X until a person approves it. `find_people`, `review_people`, `save_sequence_draft` and `add_leads` never send. Sending starts with `set_sequence_status` `active` on an approved sequence, and each reply is answered only through `decide_reply`.
 
+## Tool permissions
+
+Every tool is classified for AI clients that ask before acting. Read tools never change anything. Write tools change workspace records but contact no one. Sensitive writes contact a third party, act in public, or spend money, so an AI client should show the details and get the user's yes each time. Hints in `tools/list` match this table (`readOnlyHint`, `destructiveHint`, `openWorldHint`).
+
+| Tool | Class | Side effect |
+|---|---|---|
+| `get_cold_message_examples` | Read | none |
+| `get_company` | Read | none |
+| `get_lead_profile` | Read | none |
+| `get_pipeline` | Read | none |
+| `get_workspace` | Read | none |
+| `get_x_play_review` | Read | none |
+| `list_leads` | Read | none |
+| `list_pending_replies` | Read | none |
+| `list_sequences` | Read | none |
+| `search_known_people` | Read | none |
+| `add_company_contact` | Write | changes workspace records only; contacts no one |
+| `record_customer_signal` | Write | changes workspace records only; contacts no one |
+| `remove_leads` | Write | stops future automation for those people; never deletes history |
+| `save_company` | Write | changes workspace records only; contacts no one |
+| `save_opportunity` | Write | changes workspace records only; contacts no one |
+| `add_leads` | Sensitive write | people enter a sequence and a live sequence will contact them |
+| `add_to_sequence` | Sensitive write | people enter a sequence and a live sequence will contact them |
+| `decide_reply` | Sensitive write | send, invite and booking_link message the prospect at once; opt_out is permanent |
+| `enrich_person` | Sensitive write | spends workspace Energy (paid) |
+| `find_people` | Sensitive write | with confirmed=true runs a paid search (can use Energy); never contacts anyone |
+| `manage_x_play` | Sensitive write | resuming or enabling enrollment can start future X outreach |
+| `reach_post_engagers` | Sensitive write | LinkedIn: enrolls the post's engagers into a live sequence; X: collects them for review |
+| `reach_universe` | Sensitive write | people enter a sequence or email campaign that can contact them |
+| `research_competitor` | Sensitive write | starts paid background research; never contacts anyone |
+| `review_people` | Sensitive write | good fits enter the chosen sequence; a live sequence will contact them |
+| `review_x_play_candidates` | Sensitive write | good fits enter the Play's X sequence; an active sequence will DM them |
+| `save_sequence_draft` | Sensitive write | the saved sequence is live and its steps contact the people enrolled in it |
+| `set_lead_input` | Sensitive write | releases a held message step for that person |
+| `set_sequence_status` | Sensitive write | active or approved lets the paced engine contact enrolled people |
+| `x_account` | Sensitive write | follows, likes or reposts publicly from the connected X account |
+
 ## A complete flow
 
 1. `get_workspace` to read setup state, sequences, unfinished reviews and pending replies.
