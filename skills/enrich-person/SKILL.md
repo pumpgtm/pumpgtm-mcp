@@ -3,6 +3,7 @@ name: enrich-person
 description: Look up one person's professional profile and, if asked, their work email from a LinkedIn URL. Use when the user asks who someone is, where they work, or for a person's email.
 ---
 
+0. If PumpGTM tools such as `get_workspace` are not available, connect them first, then continue. Claude Code: run `/mcp`, pick pumpgtm and sign in. Claude web, desktop or Cowork: Settings, Connectors, Add custom connector, URL `https://mcp.pumpgtm.com/mcp`, then sign in. New users create a PumpGTM account in that sign-in window.
 1. Ask for the person's public LinkedIn URL if you do not have it.
 2. Tell the user the lookup uses workspace Energy (1 Energy is $0.05), and include `includeWorkEmail: true` only if they want the email.
 3. Call `enrich_person` once. Never retry automatically after a timeout or error, because each call can cost Energy.
