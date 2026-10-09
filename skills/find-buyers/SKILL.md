@@ -3,7 +3,7 @@ name: find-buyers
 description: Find people who match an ideal customer or show a buying signal (such as their company hiring for a role) and start outreach to them on LinkedIn, email or X. Use when the user asks to find leads, prospects, buyers or intent signals, or to start a campaign.
 ---
 
-0. If PumpGTM tools such as `get_workspace` are not available, connect them first, then continue. Claude Code: run `/mcp`, pick pumpgtm and sign in. Claude web, desktop or Cowork: Settings, Connectors, Add custom connector, URL `https://mcp.pumpgtm.com/mcp`, then sign in. New users create a PumpGTM account in that sign-in window.
+0. If PumpGTM tools such as `get_workspace` are not available, connect them first, then continue. Claude Code: call the pumpgtm server's `authenticate` tool and give the user the sign-in link it returns (or they can run `/mcp`, pick pumpgtm, Authenticate). Claude web, desktop or Cowork: Settings, Connectors, Add custom connector, URL `https://mcp.pumpgtm.com/mcp`, then sign in. New users create a PumpGTM account in that sign-in window.
 1. Call `get_workspace`. If `setup` lists a missing step (LinkedIn or billing), show its link and stop until it is done.
 2. Call `find_people` with `targeting` and without `confirmed`. For a hiring signal, put the roles in `currentCompanyHiringRolesAny` and the window in `currentCompanyHiringPostedWithinDays`. Show the targeting summary and candidate count and ask if it looks right.
 3. Call `find_people` again with `confirmed: true`. Show every person in the order returned: name, title, company, LinkedIn URL and match reason. Do not rank or shortlist them.
