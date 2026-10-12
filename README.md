@@ -344,12 +344,13 @@ A random sample from PumpGTM's library of the most-liked public posts on X about
 
 #### enrich_person
 
-Look up one public LinkedIn person URL. Returns professional name, headline, location, current company and title when available. Set includeWorkEmail=true to also find a work email through the data waterfall. Uses workspace Energy; 1 Energy is $0.05. Requires Energy enabled. Returns per-call energyCharged and energyHeld. Missing fields stay null. Check emailCompanyDomainMatch before using the email. Does not create leads or send outreach. Repeated calls can cost Energy; never automatically retry a timeout or error. Use find_people for audience discovery, not this tool.
+Look up one person by email or by public LinkedIn person URL (send exactly one; an email is matched to a LinkedIn profile first). Returns person: name, title, headline, location, company {name, domain}, linkedin, and connections (previously observed public follows) when there are any; person is null when nobody matches. Add find: ["x"] to get their X account, returned only when its name matches and its own bio or link points at their LinkedIn, company domain or company name (x.evidence says which). Add find: ["work_email"] for a work email; check workEmail.matchesCompanyDomain before using it. A requested extra that did not come back is listed in missing with a reason. Uses workspace Energy; 1 Energy is $0.05; energyUsed is what this call spent. Requires Energy enabled. Does not create leads or send outreach. Repeated calls can cost Energy; never automatically retry a timeout or error. Use find_people for audience discovery, not this tool.
 
 | Argument | Type | Notes |
 |---|---|---|
-| `linkedinUrl` | string | required. |
-| `includeWorkEmail` | boolean |  |
+| `email` | string | Send this or `linkedin`. |
+| `linkedin` | string | Send this or `email`. |
+| `find` | array | Optional: `x`, `work_email`. |
 
 ### Post engagers and X (X tools need the X channel)
 
