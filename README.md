@@ -81,7 +81,7 @@ Claude Code: `claude mcp add --transport http pumpgtm https://mcp.pumpgtm.com/mc
 
 ## Install as a plugin
 
-The PumpGTM plugin bundles this server with four skills: write a cold message, find buyers, handle replies, and look up a person. In Claude Code:
+The PumpGTM plugin bundles this server with five skills: write a cold message, make a message sound human, find buyers, handle replies, and look up a person. In Claude Code:
 
 ```
 /plugin marketplace add pumpgtm/pumpgtm-mcp
