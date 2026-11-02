@@ -72,7 +72,7 @@ await client.connect(
     requestInit: { headers: { Authorization: "Bearer YOUR_WORKSPACE_KEY" } },
   }),
 );
-const { tools } = await client.listTools(); // up to 34 tools, depending on the workspace's features
+const { tools } = await client.listTools(); // up to 38 tools, depending on the workspace's features
 ```
 
 ChatGPT (until the PumpGTM listing is approved in the ChatGPT directory; Developer mode is no longer needed): open **Plugins** (chatgpt.com/plugins), click **+** and choose **Add custom MCP server**. Name it PumpGTM, paste `https://mcp.pumpgtm.com/mcp` as the Server URL, keep OAuth, click **I understand and want to continue**, then **Create as a plugin**. Open your personal plugins (chatgpt.com/plugins?view=personal), open PumpGTM and click **+** to install it, then sign in to PumpGTM and allow the connection. In a chat, type @PumpGTM and ask it to find buyers.
@@ -175,11 +175,11 @@ Reporting: `get_workspace` (`view: "summary"` for the funnel and account pacing,
 Tools scheduled for removal say so in their description for at least 90 days before leaving `tools/list`. There is no fixed rate limit on the MCP server today; discovery is paced by each workspace's daily provider budget.
 
 <details>
-<summary><b>Tool reference: all 34 tools, arguments and modes</b> (generated from the live <code>tools/list</code>)</summary>
+<summary><b>Tool reference: all 38 tools, arguments and modes</b> (generated from the live <code>tools/list</code>)</summary>
 
 ## Tool reference
 
-Generated from the live `tools/list` on 2026-10-12: 34 tools. "Read only" tools never write. Feature-gated groups return a structured error on workspaces without that feature. Every tool also takes an optional `workspaceId`: a Team owner uses it to act on one of their workspaces; omit it for your own.
+Generated from the live `tools/list` on 2026-11-02: 38 tools. "Read only" tools never write. Feature-gated groups return a structured error on workspaces without that feature. Every tool also takes an optional `workspaceId`: a Team owner uses it to act on one of their workspaces; omit it for your own.
 
 ## Start here
 
@@ -379,6 +379,44 @@ A random sample from PumpGTM's library of the most-liked public posts on X about
 | Argument | Type | Notes |
 |---|---|---|
 | `count` | integer | default `5`. range 1 to 10. |
+
+## Analytics, threads and undo
+
+### get_analytics (read only)
+
+Read the same outreach results as /analytics: totals, daily activity, Plays and their Sequences, message-step performance, channels and highest/lowest eligible results. Defaults to range=30d and scope=workspace. Team scope requires a personal OAuth or personal delegation key belonging to a current Team owner/admin, used from its own home workspace; shared workspace and operator keys cannot read team scope. Enrolled is all-time current Sequence assignment; other activity uses the selected Pacific-time window. Reply rates use a full 14-day observation window and rankings require 30 eligible people per result. Null rankings mean insufficient or tied results. Clicks are unavailable; meetings have partial coverage. Cached report timestamps are returned explicitly. No message text, lead records, paid lookups or outreach actions.
+
+| Argument | Type | Notes |
+|---|---|---|
+| `range` | `7d`, `30d`, `90d` |  |
+| `scope` | `workspace`, `team` |  |
+
+### get_lead_thread (read only)
+
+Read incoming and outgoing LinkedIn messages using the lead's original sender. No sends, reply decisions or read receipts. Pass leadId from list_leads and optionally limit (1–100, default 50). Each page is oldest first; nextCursor retrieves the next older page, so prepend it to the conversation. Reuse cursors only for the same lead and workspace within 30 minutes. available=false means the lead has no saved LinkedIn thread yet; provider failures are errors, never empty history. Text and attachment presence only; no attachment downloads. LinkedIn only for now.
+
+| Argument | Type | Notes |
+|---|---|---|
+| `channel` | string |  |
+| `limit` | integer |  |
+| `cursor` | string |  |
+| `leadId` | uuid | required. |
+
+### undo_remove_leads
+
+Only when the customer explicitly asks to undo a removal. Pass exact removalIds from remove_leads or list_leads removal.id. Restores the same lead in its original sequence with its progress; paused sequences stay paused. No copy is created and this call sends nothing. Replies, opt-outs, changed sequences, overlapping outreach and unconfirmed sends can block restoration; explain each returned reason. Retrying the same removal IDs is safe and cannot undo a later removal. Company exclusions and cancelled imports are not reversed. Open world: restored outreach may later contact these people through the ordinary paced engine.
+
+| Argument | Type | Notes |
+|---|---|---|
+| `removalIds` | array | required. Exact removal IDs from remove_leads or the lead's removal field. Reuse these IDs for retries. |
+
+### get_webhook_play_setup (read only)
+
+Read setup instructions for HubSpot form signups or a generic Webhook Play. Omit playId for creation links; pass it for the setup URL, relevant OAuth or webhook instructions, test steps, troubleshooting and up to five saved contacts. Explain one step at a time in plain language. Returns OAuth setup guidance for HubSpot, without claiming an existing connection or configuring HubSpot automatically. Never returns credentials, creates a Play, activates a sequence, enrolls or sends. Use this for connecting HubSpot/forms, testing signup intake, or diagnosing webhook setup.
+
+| Argument | Type | Notes |
+|---|---|---|
+| `playId` | uuid |  |
 
 ## People data (uses Energy)
 
